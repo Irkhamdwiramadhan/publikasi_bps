@@ -27,6 +27,10 @@
 
         .label-text { font-weight: 600; color: #1e293b; }
         .form-section { margin-bottom: 2rem; }
+        .border{
+         
+            border-radius: 15px;
+        }
     </style>
 
     {{-- 🧭 Header --}}
@@ -82,7 +86,7 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div class="col-span-2">
                                 <label class="label"><span class="label-text">Judul Publikasi</span></label>
-                                <select name="publication_id" class="select select-bordered w-full" required>
+                                <select name="publication_id" class="border select select-bordered w-full" required>
                                     <option value="" disabled selected>-- Pilih Judul Publikasi --</option>
                                     @foreach($publications as $pub)
                                         <option value="{{ $pub->id }}" {{ old('publication_id') == $pub->id ? 'selected' : '' }}>
@@ -94,7 +98,7 @@
 
                             <div>
                                 <label class="label"><span class="label-text">Kategori Publikasi</span></label>
-                                <select name="kategori" class="select select-bordered w-full" required>
+                                <select name="kategori" class="border select select-bordered w-full" required>
                                     <option value="" disabled selected>-- Pilih Kategori --</option>
                                         <option value="Statistik Kesejahteraan Rakyat" {{ old('kategori') == 'Statistik Kesejahteraan Rakyat' ? 'selected' : '' }}>Statistik Kesejahteraan Rakyat</option>
                                         <option value="Statistik Indonesia" {{ old('kategori') == 'Statistik Indonesia' ? 'selected' : '' }}>Statistik Indonesia</option>
@@ -114,7 +118,7 @@
 
                             <div>
                                 <label class="label"><span class="label-text">Pembuat Cover</span></label>
-                                <select name="pembuat_cover" class="select select-bordered w-full" required>
+                                <select name="pembuat_cover" class="border select select-bordered w-full" required>
                                     <option value="" disabled selected>-- Pilih Pembuat Cover --</option>
                                     <option value="Subdit Publikasi/IPDS">Subdit Publikasi/IPDS</option>
                                     <option value="Subject Matter">Subject Matter</option>
@@ -129,19 +133,19 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label class="label"><span class="label-text">No. ISBN (Jika ada)</span></label>
-                                <input type="text" name="isbn" class="input input-bordered w-full" placeholder="Contoh: 978-602-XXX-XX-X" value="{{ old('isbn') }}">
+                                <input type="text" name="isbn" class="border input input-bordered w-full" placeholder="Contoh: 978-602-XXX-XX-X" value="{{ old('isbn') }}">
                             </div>
                             <div>
                                 <label class="label"><span class="label-text">No. ISSN (Jika ada)</span></label>
-                                <input type="text" name="issn" class="input input-bordered w-full" placeholder="Contoh: 2774-16XX" value="{{ old('issn') }}">
+                                <input type="text" name="issn" class="border input input-bordered w-full" placeholder="Contoh: 2774-16XX" value="{{ old('issn') }}">
                             </div>
                             <div>
                                 <label class="label"><span class="label-text">Jumlah Halaman Romawi</span></label>
-                                <input type="text" name="jumlah_romawi" class="input input-bordered w-full" placeholder="Contoh: xiv" value="{{ old('jumlah_romawi') }}">
+                                <input type="text" name="jumlah_romawi" class="border input input-bordered w-full" placeholder="Contoh: xiv" value="{{ old('jumlah_romawi') }}">
                             </div>
                             <div>
                                 <label class="label"><span class="label-text">Jumlah Halaman Arab</span></label>
-                                <input type="text" name="jumlah_arab" class="input input-bordered w-full" placeholder="Contoh: 108" value="{{ old('jumlah_arab') }}">
+                                <input type="text" name="jumlah_arab" class="border input input-bordered w-full" placeholder="Contoh: 108" value="{{ old('jumlah_arab') }}">
                             </div>
                         </div>
                     </div>
@@ -152,7 +156,7 @@
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div>
                                 <label class="label"><span class="label-text">Orientasi</span></label>
-                                <select name="orientasi" class="select select-bordered w-full" required>
+                                <select name="orientasi" class="border select select-bordered w-full" required>
                                     <option value="" disabled selected>-- Pilih Orientasi --</option>
                                     <option value="Portrait">Portrait</option>
                                     <option value="Landscape">Landscape</option>
@@ -160,7 +164,7 @@
                             </div>
                             <div>
                                 <label class="label"><span class="label-text">Diterbitkan Untuk</span></label>
-                                <select name="diterbitkan_untuk" class="select select-bordered w-full" required>
+                                <select name="diterbitkan_untuk" class="border select select-bordered w-full" required>
                                     <option value="" disabled selected>-- Pilih Target --</option>
                                     <option value="Publik">Publik/Luar BPS</option>
                                     <option value="Internal">Internal/BPS</option>
@@ -168,7 +172,7 @@
                             </div>
                             <div>
                                 <label class="label"><span class="label-text">Ukuran Kertas</span></label>
-                                <select name="ukuran_kertas" class="select select-bordered w-full" required>
+                                <select name="ukuran_kertas" class="border select select-bordered w-full" required>
                                     <option value="" disabled selected>-- Pilih Ukuran --</option>
                                     <option value="A4">A4</option>
                                     <option value="A5">A5</option>

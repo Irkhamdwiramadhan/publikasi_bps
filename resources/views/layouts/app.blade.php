@@ -42,11 +42,9 @@
 
         {{-- KONTEN UTAMA --}}
         <div class="drawer-content flex flex-col min-h-screen">
-
-            {{-- Navbar --}}
+            {{-- ... (Navbar, Header, Konten, Footer Anda tetap sama) ... --}}
             @include('layouts.navigation')
 
-            {{-- Header --}}
             @if (isset($header))
             <header class="bg-base-100 dark:bg-base-200 shadow-sm">
                 <div class="py-4 px-4 sm:px-6 lg:px-8">
@@ -55,31 +53,40 @@
             </header>
             @endif
 
-            {{-- Konten utama --}}
             <main class="flex-grow">
                 {{ $slot }}
             </main>
             
-            {{-- Footer --}}
             <footer class="py-4 text-center text-sm text-base-content/50">
                 Copyright © {{ date('Y') }} - All right reserved by BPS Kabupaten Tegal
             </footer>
-
         </div>
+        
 
-        {{-- SIDEBAR --}}
+        {{-- 
+          SIDEBAR (MODIFIKASI DI SINI)
+        --}}
         <div class="drawer-side">
             <label for="my-drawer-2" aria-label="close sidebar" class="drawer-overlay"></label>
             
-            <aside class="w-64 min-h-full bg-base-100 text-base-content">
-                <nav class="flex-1 overflow-y-auto p-4 space-y-2 sidebar-scroll">
+            {{-- 
+              PERUBAHAN:
+              1. Hapus 'bg-base-100' dan 'text-base-content'
+              2. Tambahkan class gradien, shadow, dan rounded dari file sidebar.blade.php
+              3. Hapus 'p-4' dari <nav> karena padding sudah diatur di dalam sidebar.
+            --}}
+            <aside class="w-64 min-h-full 
+                          bg-gradient-to-b from-white via-gray-50 to-gray-100 text-gray-800 
+                          shadow-md rounded-r-2xl overflow-hidden">
+                
+                {{-- Kita buat <nav> ini membungkus sidebar dan mengelola scrolling --}}
+                <nav class="flex flex-col h-full sidebar-scroll overflow-y-auto">
                     @include('layouts.sidebar')
                 </nav>
             </aside>
         </div>
     </div>
 
-    {{-- 🔹 Tambahkan ini agar script dari @push('scripts') di view lain bisa muncul --}}
     @stack('scripts')
 
 </body>

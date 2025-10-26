@@ -4,9 +4,11 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicationController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
-use App\Http\Controllers\SprpController; // <-- 1. Import Controller baru
+use App\Http\Controllers\SprpController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SubmissionPublicationController;
+use App\Http\Controllers\SpnsrController;
+use App\Http\Controllers\DashboardController;
 
 /*
 |--------------------------------------------------------------------------
@@ -14,13 +16,21 @@ use App\Http\Controllers\SubmissionPublicationController;
 |--------------------------------------------------------------------------
 */
 
+// --- [TAMBAHAN] RUTE TES DEBUGGING ---
+// Tes ini untuk memastikan server Anda membaca file web.php
+Route::get('/test-route', function () {
+    return 'Halo! Rute tes ini berfungsi!';
+});
+
+
 Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+// Route untuk Dashboard
+Route::get('/dashboard', [DashboardController::class, 'index'])
+    ->middleware(['auth', 'verified']) // Pastikan hanya user terautentikasi
+    ->name('dashboard'); // Nama route standar dari Breeze/Jetstream
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -29,46 +39,49 @@ Route::middleware('auth')->group(function () {
 
     Route::middleware(['role:Admin'])->group(function () {
         Route::resource('publications', PublicationController::class);
+        // [FIX] Hapus duplikat Route::resource('users', ...)
         Route::resource('users', UserController::class);
-        Route::patch('/users/{user}/status', [App\Http\Controllers\UserController::class, 'updateStatus'])->name('users.updateStatus');
-
-        // Rute untuk Impor & Ekspor Excel
+        Route::patch('/users/{user}/status', [UserController::class, 'updateStatus'])->name('users.updateStatus');
         Route::get('publications-export-template', [PublicationController::class, 'exportTemplate'])->name('publications.exportTemplate');
         Route::post('publications-import', [PublicationController::class, 'import'])->name('publications.import');
-
-
-        Route::resource('users', App\Http\Controllers\UserController::class);
     });
 
-    // --- GRUP BARU UNTUK PEGAWAI (PENYUSUN, PEMERIKSA, PIMPINAN) ---
-    // Hanya pengguna dengan salah satu dari peran ini yang bisa mengaksesnya.
-
-    // [REVISI DI SINI]
-    // Kita gunakan nama Role 'Pemeriksa' langsung, bukan nama Gate 'is_pemeriksa'
     Route::middleware(['role:Penyusun|Pemeriksa|Pimpinan'])->group(function () {
-        // Rute untuk fitur Pengajuan.
         Route::resource('sprp', SprpController::class)->only(['index', 'create', 'store', 'show']);
-
-        // Tambahkan rute untuk 'updateNomor' yang kita buat di index
         Route::patch('/sprp/{sprp}/update-nomor', [SprpController::class, 'updateNomor'])->name('sprp.updateNomor');
     });
 
+    // --- GRUP PENGAJUAN PUBLIKASI (DIRAPIKAN) ---
 
-    Route::middleware(['auth'])->group(function () {
-        Route::resource('pengajuan_publikasi', SubmissionPublicationController::class)
-            ->names('pengajuan_publikasi');
-    });
-    // web.php
-    Route::put('/pengajuan_publikasi/{id}/update-status', [SubmissionPublicationController::class, 'updateStatus'])
+    // CRUD
+    Route::resource('pengajuan_publikasi', SubmissionPublicationController::class)
+        ->parameters(['pengajuan_publikasi' => 'submission']) // <-- Parameter adalah {submission}
+        ->names('pengajuan_publikasi');
+
+    // Update Status
+    // [FIX] Ganti ke 'patch' dan gunakan parameter '{submission}' agar konsisten
+    Route::patch('/pengajuan_publikasi/{submission}/update-status', [SubmissionPublicationController::class, 'updateStatus'])
+        ->middleware(['role:Pemeriksa|Admin'])
         ->name('pengajuan_publikasi.updateStatus');
 
-    // Rute kustom untuk Halaman Komentar
-    Route::get('/pengajuan_publikasi/{submissionPublication}/comment', [SubmissionPublicationController::class, 'comment'])->name('pengajuan_publikasi.comment');
-    Route::post('/pengajuan_publikasi/{submissionPublication}/comment', [SubmissionPublicationController::class, 'storeComment'])->name('pengajuan_publikasi.storeComment');
+    // Komentar
+    // [FIX] Gunakan parameter '{submission}' agar konsisten
+    Route::get('/pengajuan_publikasi/{submission}/comment', [SubmissionPublicationController::class, 'comment'])->name('pengajuan_publikasi.comment');
+    Route::post('/pengajuan_publikasi/{submission}/comment', [SubmissionPublicationController::class, 'storeComment'])->name('pengajuan_publikasi.storeComment');
+
+    // Panduan
+    Route::get('/panduan_publikasi', function () { // <-- Rute 'panduan' sudah benar
+        return view('panduan_publikasi.index');
+    })->name('panduan.index');
+
+    // Route::middleware('auth')->group(function () {
+    //     Route::get('/spnsr', [SpnsrController::class, 'index'])->name('spnsr.index');
+    //     Route::post('/spnsr/generate', [SpnsrController::class, 'generate'])->name('spnsr.generate');
+    // });
+    Route::get('/cetak-spnsr', [SpnsrController::class, 'create'])->name('spnsr.create');
+
+    // PERBAIKI BAGIAN INI: Pastikan ini adalah 'generatePDF'
+    Route::post('/cetak-spnsr', [SpnsrController::class, 'generatePDF'])->name('spnsr.generate');
 });
-
-
-// [DIHAPUS] Kode "pencegat" (dd) untuk login telah dihapus.
-// ------------------------------------
 
 require __DIR__ . '/auth.php';

@@ -54,6 +54,10 @@
         }
         input:checked + .slider { background-color: #22c55e; } /* Hijau saat aktif */
         input:checked + .slider:before { transform: translateX(22px); }
+        .border-premium {
+            border-width: 2px !important;
+            border-radius: 15px;
+        }
     </style>
 
     {{-- Header Halaman --}}
@@ -83,8 +87,8 @@
                 <div class="card-body p-6 md:p-8">
                     
                     <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-                        <h3 class="text-xl font-bold text-base-content/90">Daftar Pegawai</h3>
-                        <a href="{{ route('users.create') }}" class="btn btn-primary btn-premium w-full md:w-auto text-white gap-2">
+                        <h3 class=" text-xl font-bold text-base-content/90">Daftar Pegawai</h3>
+                        <a href="{{ route('users.create') }}" class="border-premium btn btn-primary btn-premium w-full md:w-auto text-white gap-2">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" /></svg>
                             Tambah Pegawai
                         </a>
@@ -92,14 +96,14 @@
 
                     <div class="flex justify-between items-center mb-4">
                         <div class="join">
-                            <a href="{{ route('users.index', ['search' => request('search')]) }}" class="join-item btn btn-sm {{ !request('status') ? 'btn-primary' : 'btn-ghost' }}">Semua</a>
-                            <a href="{{ route('users.index', ['status' => 'aktif', 'search' => request('search')]) }}" class="join-item btn btn-sm {{ request('status') == 'aktif' ? 'btn-primary' : 'btn-ghost' }}">Aktif</a>
+                            <a href="{{ route('users.index', ['search' => request('search')]) }}" class="text-gray-300 join-item btn btn-sm {{ !request('status') ? 'btn-primary' : 'btn-ghost' }}">Semua</a>
+                            <a href="{{ route('users.index', ['status' => 'aktif', 'search' => request('search')]) }}" class=" join-item btn btn-sm {{ request('status') == 'aktif' ? 'btn-primary' : 'btn-ghost' }}">Aktif</a>
                             <a href="{{ route('users.index', ['status' => 'tidak-aktif', 'search' => request('search')]) }}" class="join-item btn btn-sm {{ request('status') == 'tidak-aktif' ? 'btn-primary' : 'btn-ghost' }}">Tidak Aktif</a>
                         </div>
                         <form action="{{ route('users.index') }}" method="GET" class="w-full md:w-1/3 relative">
                             @if(request('status')) <input type="hidden" name="status" value="{{ request('status') }}"> @endif
                             <span class="absolute inset-y-0 left-0 flex items-center pl-3"><svg class="w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="none"><path d="M21 21L15 15M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>
-                            <input name="search" type="text" placeholder="Cari nama atau NIP..." class="input input-bordered w-full pl-10" value="{{ request('search') }}" />
+                            <input name="search" type="text" placeholder="Cari nama atau NIP..." class="border-premium input input-bordered w-full pl-10" value="{{ request('search') }}" />
                         </form>
                     </div>
 

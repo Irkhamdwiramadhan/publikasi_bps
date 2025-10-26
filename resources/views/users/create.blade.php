@@ -1,9 +1,3 @@
-{{-- 
-    File ini adalah revisi total UI/UX halaman Tambah Pegawai.
-    Desainnya disamakan dengan halaman index untuk menciptakan pengalaman yang konsisten,
-    menggunakan layout lebar dan gaya form yang bersih dan profesional.
---}}
-
 <x-app-layout>
     {{-- CSS Kustom --}}
     <style>
@@ -23,13 +17,15 @@
     {{-- Header Halaman --}}
     <x-slot name="header">
         <div>
-            <h2 class="font-semibold text-xl text-black leading-tight">
+            {{-- REVISI: Mengganti text-black menjadi text-base-content --}}
+            <h2 class="font-semibold text-xl text-base-content leading-tight">
                 {{ __('Tambah Pegawai Baru') }}
             </h2>
-            <div class="text-sm breadcrumbs text-gray-500">
+            {{-- REVISI: Mengganti text-gray-500 menjadi text-base-content/70 --}}
+            <div class="text-sm breadcrumbs text-base-content/70">
                 <ul>
-                    <li><a href="{{ route('dashboard') }}">Dashboard</a></li> 
-                    <li><a href="{{ route('users.index') }}">Manajemen Pegawai</a></li> 
+                    <li><a href="{{ route('dashboard') }}" class="hover:text-primary">Dashboard</a></li> 
+                    <li><a href="{{ route('users.index') }}" class="hover:text-primary">Manajemen Pegawai</a></li> 
                     <li>Tambah Baru</li>
                 </ul>
             </div>
@@ -38,9 +34,10 @@
 
     {{-- Konten Utama --}}
     <div class="py-12 fade-in">
-        <div class="px-4 sm:px-6 lg:px-8">
+        {{-- REVISI: Menyamakan max-w-5xl seperti halaman edit --}}
+        <div class="px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto">
 
-            <div class="card bg-base-100 shadow-xl max-w-4xl mx-auto">
+            <div class="card bg-base-100 shadow-xl">
                 <div class="card-body p-6 md:p-8">
 
                     <h3 class="text-xl font-bold text-base-content/90 mb-6">Formulir Pegawai Baru</h3>
@@ -63,46 +60,80 @@
 
                     <form action="{{ route('users.store') }}" method="POST">
                         @csrf
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-                            
-                            <div class="form-control w-full">
-                                <label class="label"><span class="label-text font-semibold">Nama Lengkap</span></label>
-                                <input type="text" name="name" placeholder="Contoh: Budi Santoso, S.Stat." class="input input-bordered w-full" required value="{{ old('name') }}">
-                            </div>
+                        
+                        {{-- REVISI: Menggunakan space-y-6 untuk memisahkan grup --}}
+                        <div class="space-y-6">
 
-                            <div class="form-control w-full">
-                                <label class="label"><span class="label-text font-semibold">NIP BPS</span></label>
-                                <input type="text" name="nip_bps" placeholder="Masukkan 18 digit NIP BPS" class="input input-bordered w-full" required value="{{ old('nip_bps') }}">
-                            </div>
+                            {{-- Grup 1: Informasi Pegawai --}}
+                            <section>
+                                <h4 class="text-lg font-medium text-base-content/80 border-b border-base-200 pb-2 mb-4">Informasi Pegawai</h4>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                                    {{-- Nama Lengkap --}}
+                                    <div class="form-control w-full">
+                                        <label for="name" class="block text-sm font-semibold text-base-content/80 mb-1">Nama Lengkap</label>
+                                        <input id="name" type="text" name="name" placeholder="Contoh: Budi Santoso, S.Stat." class="input input-bordered w-full rounded-[15px] {{ $errors->has('name') ? 'input-error' : '' }}" required value="{{ old('name') }}">
+                                        @error('name')
+                                            <p class="text-error text-xs mt-2">{{ $message }}</p>
+                                        @enderror
+                                    </div>
 
-                            <div class="form-control w-full">
-                                <label class="label"><span class="label-text font-semibold">Password</span></label>
-                                <input type="password" name="password" placeholder="Minimal 8 karakter" class="input input-bordered w-full" required>
-                            </div>
-
-                            <div class="form-control w-full">
-                                <label class="label"><span class="label-text font-semibold">Konfirmasi Password</span></label>
-                                <input type="password" name="password_confirmation" placeholder="Ketik ulang password" class="input input-bordered w-full" required>
-                            </div>
-
-                            <div class="form-control md:col-span-2">
-                                <label class="label"><span class="label-text font-semibold">Peran Fungsional</span></label>
-                                <div class="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-2 p-4 border rounded-lg bg-base-200/50">
-                                    @forelse($roles as $role)
-                                    <label class="label cursor-pointer justify-start">
-                                        <input type="checkbox" name="roles[]" value="{{ $role->name }}" class="checkbox checkbox-primary mr-3" {{ (is_array(old('roles')) && in_array($role->name, old('roles'))) ? ' checked' : '' }} />
-                                        <span class="label-text">{{ $role->name }}</span> 
-                                    </label>
-                                    @empty
-                                    <span class="text-gray-500 text-sm col-span-full">Tidak ada peran fungsional yang tersedia.</span>
-                                    @endforelse
+                                    {{-- NIP BPS --}}
+                                    <div class="form-control w-full">
+                                        <label for="nip_bps" class="block text-sm font-semibold text-base-content/80 mb-1">NIP BPS</label>
+                                        <input id="nip_bps" type="text" name="nip_bps" placeholder="Masukkan 18 digit NIP BPS" class="input input-bordered w-full rounded-[15px] {{ $errors->has('nip_bps') ? 'input-error' : '' }}" required value="{{ old('nip_bps') }}">
+                                        @error('nip_bps')
+                                            <p class="text-error text-xs mt-2">{{ $message }}</p>
+                                        @enderror
+                                    </div>
                                 </div>
-                            </div>
+                            </section>
+
+                            {{-- Grup 2: Keamanan --}}
+                            <section>
+                                <h4 class="text-lg font-medium text-base-content/80 border-b border-base-200 pb-2 mb-4">Keamanan Akun</h4>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                                    {{-- Password --}}
+                                    <div class="form-control w-full">
+                                        <label for="password" class="block text-sm font-semibold text-base-content/80 mb-1">Password</label>
+                                        <input id="password" type="password" name="password" placeholder="Minimal 8 karakter" class="input input-bordered w-full rounded-[15px] {{ $errors->has('password') ? 'input-error' : '' }}" required>
+                                        @error('password')
+                                            <p class="text-error text-xs mt-2">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+
+                                    {{-- Konfirmasi Password --}}
+                                    <div class="form-control w-full">
+                                        <label for="password_confirmation" class="block text-sm font-semibold text-base-content/80 mb-1">Konfirmasi Password</label>
+                                        <input id="password_confirmation" type="password" name="password_confirmation" placeholder="Ketik ulang password" class="input input-bordered w-full rounded-[15px]" required>
+                                    </div>
+                                </div>
+                            </section>
+
+                            {{-- Grup 3: Peran --}}
+                            <section>
+                                <h4 class="text-lg font-medium text-base-content/80 border-b border-base-200 pb-2 mb-4">Peran Fungsional</h4>
+                                <div class="form-control w-full">
+                                    <div class="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-2 p-4 border rounded-[15px] bg-base-200/50">
+                                        @forelse($roles as $role)
+                                        <label class="label cursor-pointer justify-start">
+                                            <input type="checkbox" name="roles[]" value="{{ $role->name }}" class="checkbox checkbox-primary mr-3" {{ (is_array(old('roles')) && in_array($role->name, old('roles'))) ? ' checked' : '' }} />
+                                            <span class="label-text">{{ $role->name }}</span> 
+                                        </label>
+                                        @empty
+                                        <span class="text-gray-500 text-sm col-span-full">Tidak ada peran fungsional yang tersedia.</span>
+                                        @endforelse
+                                    </div>
+                                    @error('roles')
+                                        <p class="text-error text-xs mt-2">{{ $message }}</p>
+                                    @enderror
+                                </div>
+                            </section>
                         </div>
                         
+                        {{-- Tombol Aksi --}}
                         <div class="flex justify-end items-center mt-8 pt-6 border-t border-base-200">
                             <a href="{{ route('users.index') }}" class="btn btn-ghost mr-3">Batal</a>
-                            <button type="submit" class="btn btn-primary btn-premium">
+                            <button type="submit" class="btn btn-primary btn-premium rounded-[15px]">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" /></svg>
                                 Simpan Pegawai
                             </button>
@@ -113,4 +144,3 @@
         </div>
     </div>
 </x-app-layout>
-

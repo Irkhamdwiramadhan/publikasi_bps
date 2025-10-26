@@ -7,26 +7,31 @@ use App\Models\Publication;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Comment;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests; // [REVISI 1] Import Trait
 
 class SubmissionPublicationController extends Controller
 {
     /**
      * Tampilkan daftar pengajuan publikasi.
      */
-  public function index()
-{
-    $query = SubmissionPublication::with(['publication', 'user'])->latest();
+    public function index()
+    {
+        $query = SubmissionPublication::with(['publication', 'user']);
 
-    // Jika user adalah Penyusun, batasi hanya data miliknya
-    if (Auth::user()->role === 'Penyusun') {
-        $query->where('user_id', Auth::id());
+        // Logika "Pintar":
+        // [REVISI] Ejaan yang benar adalah hasAnyRole (dengan R)
+        if (Auth::user()->hasRole('Penyusun') && !Auth::user()->hasAnyRole(['Pemeriksa', 'Admin'])) {
+            $query->where('user_id', Auth::id());
+        }
+
+        // Jika dia 'Pemeriksa' atau 'Admin', if di atas akan diabaikan
+        // dan semua data akan ditampilkan.
+
+        $submissions = $query->latest()->paginate(10);
+
+        return view('pengajuan_publikasi.index', compact('submissions'));
     }
 
-    // Jika user adalah Pemeriksa atau Pimpinan, tampilkan semua data
-    $submissions = $query->get();
-
-    return view('pengajuan_publikasi.index', compact('submissions'));
-}
 
 
 
@@ -73,16 +78,16 @@ class SubmissionPublicationController extends Controller
     }
 
 
-    public function comment(SubmissionPublication $submissionPublication)
+    public function comment(SubmissionPublication $submission)
     {
-        $submissionPublication->load('comments.user', 'publication'); // Eager load relasi
-        return view('pengajuan_publikasi.comment', ['submission' => $submissionPublication]);
+        $submission->load('comments.user', 'publication'); // Eager load relasi
+        return view('pengajuan_publikasi.comment', ['submission' => $submission]);
     }
 
     /**
      * [REVISI TOTAL] Menggunakan Route Model Binding dan Relasi
      */
-    public function storeComment(Request $request, SubmissionPublication $submissionPublication)
+    public function storeComment(Request $request, SubmissionPublication $submission)
     {
         // [REVISI] Validasi 'body' (sesuai nama field di comment.blade.php)
         $request->validate([
@@ -91,12 +96,55 @@ class SubmissionPublicationController extends Controller
 
         // [REVISI] Menggunakan relasi 'comments()' yang sudah kita buat
         // Ini jauh lebih bersih dan otomatis mengisi foreign key.
-        $submissionPublication->comments()->create([
+        $submission->comments()->create([
             'body' => $request->body,       // dari <textarea name="body">
-            'user_id' => auth()->id(),
+            'user_id' => Auth::id(),     // user yang sedang login
         ]);
 
-        return redirect()->route('pengajuan_publikasi.comment', $submissionPublication->id)
+        return redirect()->route('pengajuan_publikasi.comment', $submission->id)
             ->with('success', 'Komentar berhasil dikirim.');
+    }
+
+    public function edit(SubmissionPublication $submission)
+    {
+        // [FIX 1] Eager load relasi 'publication' dan 'user'
+        // Ini untuk memperbaiki error 500 (property of non-object) di view Blade
+        $submission->load(['publication', 'user']);
+
+        // [FIX 2] Logika query yang disarankan sebelumnya
+        // Ambil ID publikasi yang sudah diajukan, KECUALI yang sedang diedit ini.
+        $submittedPublicationIds = SubmissionPublication::where('id', '!=', $submission->id)
+            ->pluck('publication_id');
+
+        // Ambil semua publikasi yang TIDAK ada di daftar itu.
+        $publications = Publication::whereNotIn('id', $submittedPublicationIds)
+            ->select('id', 'title_ind', 'publication_type')
+            ->orderBy('title_ind')
+            ->get();
+
+        return view('pengajuan_publikasi.edit', [
+            'submission' => $submission,
+            'publications' => $publications
+        ]);
+    }
+
+    public function update(Request $request, SubmissionPublication $submission)
+    {
+        $request->validate([
+            'publication_id' => 'required|exists:publications,id',
+            'fungsi_pengusul' => 'required|string|max:255',
+            'tautan_publikasi' => 'nullable|url',
+            'spnrs_ketua_tim' => 'nullable|url',
+        ]);
+
+        $submission->update([
+            'publication_id' => $request->publication_id,
+            'fungsi_pengusul' => $request->fungsi_pengusul,
+            'tautan_publikasi' => $request->tautan_publikasi,
+            'spnrs_ketua_tim' => $request->spnrs_ketua_tim,
+        ]);
+
+        return redirect()->route('pengajuan_publikasi.index')
+            ->with('success', 'Pengajuan berhasil diperbarui.');
     }
 }

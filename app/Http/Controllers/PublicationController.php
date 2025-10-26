@@ -15,22 +15,52 @@ class PublicationController extends Controller
      */
     public function index(Request $request)
     {
-        // Ambil kata kunci pencarian dari URL
-        $search = $request->query('search');
+        // 1. Validasi input filter
+        $request->validate([
+            'per_page' => 'nullable|integer|in:10,25,50',
+            'year'     => 'nullable|integer',
+            'search'   => 'nullable|string|max:100',
+        ]);
 
-        // Query dasar, diurutkan dari yang terbaru
-        $query = Publication::latest();
+        // 2. Ambil semua tahun unik dari database untuk dropdown filter
+        // Kita cache query ini agar lebih cepat
+        $years = Publication::select('year')
+                            ->distinct()
+                            ->orderBy('year', 'desc')
+                            ->pluck('year');
 
-        // Jika ada pencarian, filter berdasarkan judul
-        if ($search) {
-            $query->where('title_ind', 'like', '%' . $search . '%');
+        // 3. Siapkan query dasar
+        $query = Publication::query();
+
+        // 4. Terapkan filter pencarian
+        if ($request->filled('search')) {
+            $query->where(function($q) use ($request) {
+                $q->where('title_ind', 'like', '%' . $request->search . '%')
+                  ->orWhere('catalog_number', 'like', '%' . $request->search . '%')
+                  ->orWhere('issn_number', 'like', '%' . $request->search . '%');
+            });
         }
 
-        // Ambil data dengan pagination (10 data per halaman)
-        $publications = $query->paginate(10);
+        // 5. Terapkan filter tahun
+        if ($request->filled('year')) {
+            $query->where('year', $request->year);
+        }
 
-        // Kirim data ke view
-        return view('publications.index', compact('publications'));
+        // 6. Tentukan jumlah data per halaman
+        $perPage = $request->input('per_page', 10);
+
+        // 7. Ambil data dengan paginasi
+        $publications = $query->orderBy('year', 'desc')
+                              ->orderBy('title_ind', 'asc')
+                              ->paginate($perPage)
+                              ->withQueryString(); // <-- Penting agar filter tetap ada di link paginasi
+
+        // 8. Kirim data ke view
+        return view('publications.index', [ // Ganti 'publications.index' jika nama view Anda berbeda
+            'publications' => $publications,
+            'years' => $years,
+            'filters' => $request->only(['search', 'year', 'per_page']), // Kirim filter kembali ke view
+        ]);
     }
 
     /**

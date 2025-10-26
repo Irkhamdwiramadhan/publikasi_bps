@@ -7,12 +7,23 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles; // <-- Import Trait Spatie
-
-// [REVISI] Import model-model yang akan kita hubungkan
 use App\Models\Sprp;
 use App\Models\SubmissionPublication;
 use App\Models\SubmissionComment;
 
+/**
+ * [REVISI] Menambahkan PHPDoc (DocBlock) untuk Intelephense.
+ * Ini akan "memberi tahu" VS Code tentang metode-metode dari Spatie
+ * (seperti hasRole) dan menghilangkan notifikasi "Problem".
+ *
+ * @property-read \Illuminate\Database\Eloquent\Collection|\Spatie\Permission\Models\Role[] $roles
+ * @method bool hasRole($role, $guard = null)
+ * @method bool hasAnyRole($roles, $guard = null)
+ * @method bool hasAllRoles($roles, $guard = null)
+ * @method \Spatie\Permission\Models\Role assignRole($role)
+ * @method \Spatie\Permission\Models\Role removeRole($role)
+ * @method \Spatie\Permission\Models\Role syncRoles($roles)
+ */
 class User extends Authenticatable // implements MustVerifyEmail
 {
     use HasFactory, Notifiable, HasRoles; // <-- Gunakan Trait HasRoles
@@ -58,12 +69,8 @@ class User extends Authenticatable // implements MustVerifyEmail
         return $this->hasMany(Sprp::class);
     }
 
-    // ==========================================================
-    // [TAMBAHAN] RELASI UNTUK FITUR ALUR KERJA & KOMENTAR
-    // ==========================================================
-
     /**
-     * Relasi ke SubmissionPublication (Satu user bisa membuat banyak pengajuan)
+     * Relasi ke Pengajuan Publikasi
      */
     public function submissionPublications()
     {
@@ -71,7 +78,7 @@ class User extends Authenticatable // implements MustVerifyEmail
     }
 
     /**
-     * Relasi ke SubmissionComment (Satu user bisa menulis banyak komentar)
+     * Relasi ke Komentar
      */
     public function submissionComments()
     {

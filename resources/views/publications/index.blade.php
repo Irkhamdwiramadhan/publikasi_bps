@@ -1,8 +1,3 @@
-{{-- 
-    File ini adalah versi final dan lengkap dari halaman Master Publikasi.
-    Termasuk implementasi penuh dari modal untuk fitur unggah file.
---}}
-
 <x-app-layout>
     {{-- CSS Kustom untuk Tampilan Premium --}}
     <style>
@@ -33,30 +28,29 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
         }
+        .border-premium {
+            border-width: 1px;
+            border-color: hsl(var(--bc) / 0.2);
+            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+            transition: all 0.2s ease-in-out;
+            border-radius: 20px;
+        }
     </style>
 
     {{-- Header Halaman --}}
     <x-slot name="header">
         <div class="flex flex-col md:flex-row justify-between items-center">
             <div>
-                <h2 class="font-semibold text-xl text-black dark:black leading-tight">
+                <h2 class="font-semibold text-xl text-base-content leading-tight">
                     {{ __('Master Publikasi') }}
                 </h2>
-                <div class="text-sm breadcrumbs text-black">
+                <div class="text-sm breadcrumbs text-base-content/70">
                     <ul>
-                        <li><a href="{{ route('dashboard') }}">Dashboard ></a></li> 
+                        <li><a href="{{ route('dashboard') }}" class="hover:text-primary">Dashboard</a></li> 
                         <li>Master Publikasi</li>
                     </ul>
                 </div>
             </div>
-            <!-- <div class="flex items-center gap-2 mt-3 md:mt-0">
-                <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Filter Tahun:</span>
-                <div class="join">
-                    @php $currentYear = now()->year; @endphp
-                    <a href="{{ route('publications.index', array_merge(request()->except('page'), ['year' => $currentYear])) }}" class="join-item btn btn-sm {{ request('year', $currentYear) == $currentYear ? 'btn-primary' : '' }}">{{ $currentYear }}</a>
-                    <a href="{{ route('publications.index', array_merge(request()->except('page'), ['year' => $currentYear - 1])) }}" class="join-item btn btn-sm {{ request('year') == $currentYear - 1 ? 'btn-primary' : '' }}">{{ $currentYear - 1 }}</a>
-                </div>
-            </div> -->
         </div>
     </x-slot>
 
@@ -74,41 +68,62 @@
                     <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
                         <h3 class="text-xl font-bold text-base-content/90">Daftar Publikasi</h3>
                         <div class="flex gap-2 w-full md:w-auto">
-                            <a href="{{ route('publications.exportTemplate') }}" class="btn btn-success text-white btn-premium flex-grow md:flex-none">
+                            <a href="{{ route('publications.exportTemplate') }}" class="btn btn-success text-white btn-premium flex-grow md:flex-none border-premium">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
                                 Unduh
                             </a>
-                            <button onclick="upload_modal.showModal()" class="btn btn-info text-black btn-premium flex-grow md:flex-none">
+                            <button onclick="upload_modal.showModal()" class="btn btn-info text-black btn-premium flex-grow md:flex-none ">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
                                 Unggah
                             </button>
-                            <a href="{{ route('publications.create') }}" class="btn btn-primary btn-premium flex-grow md:flex-none text-white">
+                            <a href="{{ route('publications.create') }}" class="btn btn-primary btn-premium flex-grow md:flex-none text-white border-premium">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" /></svg>
                                 Tambah Publikasi
                             </a>
                         </div>
                     </div>
 
-                    <div class="flex justify-between items-center mb-4">
-                        <div class="form-control">
-                           <!-- <label class="label">
-                               <span class="label-text">Tampilkan</span>
-                               <select class="select select-sm select-bordered ml-2" onchange="window.location = this.value">
-                                   <option value="{{ route('publications.index', array_merge(request()->except('page'), ['per_page' => 10])) }}" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10</option>
-                                   <option value="{{ route('publications.index', array_merge(request()->except('page'), ['per_page' => 25])) }}" {{ request('per_page') == 25 ? 'selected' : '' }}>25</option>
-                                   <option value="{{ route('publications.index', array_merge(request()->except('page'), ['per_page' => 50])) }}" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
-                               </select>
-                               <span class="label-text ml-2">entri</span>
-                           </label> -->
-                        </div>
-                        <form action="{{ route('publications.index') }}" method="GET" class="w-full md:w-1/3 relative">
-                            @if(request('year')) <input type="hidden" name="year" value="{{ request('year') }}"> @endif
-                            @if(request('per_page')) <input type="hidden" name="per_page" value="{{ request('per_page') }}"> @endif
-                            <span class="absolute inset-y-0 left-0 flex items-center pl-3"><svg class="w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="none"><path d="M21 21L15 15M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>
-                            <input name="search" type="text" placeholder="Cari publikasi..." class="input input-bordered w-full pl-10" value="{{ request('search') }}" />
-                        </form>
-                    </div>
+                    {{-- 
+                        REVISI BESAR DI BAWAH INI
+                        1. Menghapus semua class '...-sm' (select-sm, btn-sm) agar semua elemen filter memiliki tinggi yang SAMA.
+                        2. Menambah 'md:items-center' untuk perataan vertikal yang sempurna.
+                        3. Menambah 'mr-3' pada label untuk "ruang bernapas".
+                        4. Mengganti 'md:w-48' menjadi 'md:min-w-48' (12rem) agar "Semua Tahun" tidak terpotong.
+                    --}}
+                    <form action="{{ route('publications.index') }}" method="GET" class="mb-4">
+                        <div class="flex flex-col md:flex-row gap-4 md:gap-3 md:items-center">
+                            
+                            <div class="flex items-center">
+                                <label for="per_page" class="text-sm font-medium text-base-content/70 mr-3 whitespace-nowrap">Tampil per</label>
+                                {{-- REVISI: Hapus 'select-sm' --}}
+                                <select id="per_page" name="per_page" class="select select-bordered w-full md:w-auto border-premium" onchange="this.form.submit()">
+                                    <option value="10" {{ ($filters['per_page'] ?? 10) == 10 ? 'selected' : '' }}>10</option>
+                                    <option value="25" {{ ($filters['per_page'] ?? null) == 25 ? 'selected' : '' }}>25</option>
+                                    <option value="50" {{ ($filters['per_page'] ?? null) == 50 ? 'selected' : '' }}>50</option>
+                                </select>
+                            </div>
 
+                            <div class="flex items-center">
+                                <label for="year" class="text-sm font-medium text-base-content/70 mr-3 whitespace-nowrap ">Tahun</label>
+                                {{-- REVISI: Hapus 'select-sm' dan ganti 'w-full md:w-48' menjadi 'w-full md:min-w-48' --}}
+                                <select id="year" name="year" class="select select-bordered w-full md:min-w-48 border-premium" onchange="this.form.submit()">
+                                    <option value="">Semua Tahun</option>
+                                    @foreach($years as $year)
+                                        <option value="{{ $year }}" {{ ($filters['year'] ?? null) == $year ? 'selected' : '' }}>{{ $year }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                    
+
+                            <div class="flex gap-2">
+                                
+                                {{-- REVISI: Hapus 'btn-sm' agar tingginya sama --}}
+                                <a href="{{ route('publications.index') }}" class="btn btn-ghost btn-premium" title="Reset Filter">Reset</a>
+                            </div>
+                        </div>
+                    </form>
+                    
                     <div class="overflow-x-auto">
                         <table class="table w-full">
                             <thead>
@@ -135,7 +150,7 @@
                                         </td>
                                     </tr>
                                 @empty
-                                    <tr><td colspan="8" class="text-center py-16"><p class="text-xl font-semibold">Data Tidak Ditemukan</p></td></tr>
+                                    <tr><td colspan="8" class="text-center py-16"><p class="text-xl font-semibold">Data Tidak Ditemukan</p><p class="text-base-content/70">Coba ubah filter pencarian Anda.</p></td></tr>
                                 @endforelse
                             </tbody>
                         </table>
@@ -144,7 +159,7 @@
                     @if($publications->hasPages())
                         <div class="mt-6 flex justify-between items-center">
                             <p class="text-sm text-base-content/70">Menampilkan {{ $publications->firstItem() }} - {{ $publications->lastItem() }} dari {{ $publications->total() }} hasil</p>
-                            {{ $publications->withQueryString()->links() }}
+                            {{ $publications->links() }}
                         </div>
                     @endif
                 </div>
@@ -152,7 +167,7 @@
         </div>
     </div>
     
-    {{-- [KONTEN LENGKAP] Modal untuk Unggah File --}}
+    {{-- Modal untuk Unggah File (Tidak diubah) --}}
     <dialog id="upload_modal" class="modal modal-bottom sm:modal-middle">
         <div class="modal-box">
             <form method="dialog">
@@ -161,7 +176,7 @@
             <h3 class="font-bold text-lg">Unggah Master Publikasi</h3>
             <p class="py-4 text-sm">Pilih file Excel (.xlsx, .xls) yang sudah diisi sesuai template untuk mengimpor data secara massal. Pastikan format file sudah benar.</p>
             
-            <form method="POST" action="{{ route('publications.import') }}" enctype="multipart/form-data"> {{-- Ganti # dengan route yang benar --}}
+            <form method="POST" action="{{ route('publications.import') }}" enctype="multipart/form-data">
                 @csrf
                 <div class="form-control w-full">
                     <label class="label"><span class="label-text">Pilih File Excel</span></label>
@@ -184,4 +199,3 @@
         </form>
     </dialog>
 </x-app-layout>
-

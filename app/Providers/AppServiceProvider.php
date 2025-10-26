@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Models\SubmissionPublication;
+use App\Policies\SubmissionPublicationPolicy;
 use App\Models\User;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
@@ -14,7 +16,8 @@ class AuthServiceProvider extends ServiceProvider
      * @var array<class-string, class-string>
      */
     protected $policies = [
-        //
+        // Daftarkan Policy Anda di sini
+        SubmissionPublication::class => SubmissionPublicationPolicy::class,
     ];
 
     /**
@@ -25,9 +28,6 @@ class AuthServiceProvider extends ServiceProvider
         $this->registerPolicies();
 
         // ===== LOGIKA GATE (VERSI SPATIE YANG BENAR) =====
-
-        // Kita akan menggunakan fungsi 'hasRole()' bawaan dari Trait Spatie
-        // yang sudah ada di Model User Anda.
 
         /**
          * Gate untuk 'is_pemeriksa'
