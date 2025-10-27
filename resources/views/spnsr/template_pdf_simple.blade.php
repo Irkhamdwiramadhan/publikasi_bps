@@ -106,19 +106,37 @@
             text-align: center;
         }
 
-        .signature {
-            margin-top: 30px;
-            width: 45%; 
-            margin-left: 55%;
-            text-align: left;
-        }
-        
-        .signature .nama-ttd {
-            margin-top: 80px; /* Spasi untuk TTD & Stempel */
-            font-weight: bold;
-            text-decoration: underline;
-        }
+        /* CSS untuk gambar TTD & Stempel (DI BAWAH NAMA) */
+.signature-image {
+    display: block; /* Membuat gambar menjadi elemen blok */
+    width: 200px;   /* Sesuaikan lebar gambar TTD & Stempel */
+    height: auto;   /* Jaga rasio aspek */
+    margin-top: -65px; /* REVISI: Tarik ke atas sedikit agar pas di area TTD */
+    margin-bottom: 5px; /* REVISI: Jarak kecil antara gambar dan nama */
+    opacity: 0.9;   /* Sedikit transparan agar terlihat natural (opsional) */
+    /* position: absolute, top, left, z-index DIHAPUS */
+}
 
+.signature .nama-ttd {
+    margin-top: 0; /* REVISI: Hapus margin atas yang besar */
+    font-weight: bold;
+    text-decoration: underline;
+    /* z-index dan position relative tidak lagi diperlukan */
+}
+
+/* Penyesuaian Signature Container jika perlu */
+.signature {
+    margin-top: 30px;
+    width: 45%; 
+    margin-left: 55%;
+    text-align: left;
+    /* position: relative; tidak lagi diperlukan untuk gambar */
+}
+
+/* Jarak antara Jabatan dan Area TTD/Nama */
+.signature p:nth-of-type(2) { /* Target paragraf "Kepala BPS..." */
+    margin-bottom: 70px; /* REVISI: Beri ruang KOSONG di sini untuk TTD */
+}
     </style>
 </head>
 <body>
@@ -211,6 +229,11 @@
         <div class="signature">
             <p style="margin-bottom: 0;">Mengetahui,</p>
             <p style="margin-top: 0;">Kepala BPS Kabupaten Tegal</p>
+            {{-- REVISI: Tampilkan gambar TTD & Stempel HANYA jika status 'Disetujui' --}}
+            @if(isset($submission) && $submission->status == 'Disetujui')
+                {{-- Pastikan gambar ada di public/images/ttd.png --}}
+                <img src="{{ public_path('images/tdd.png') }}" class="signature-image">
+            @endif
             
             <div class="nama-ttd">
                 <p style="margin-bottom: 0;">{{ $penanda_tangan['nama'] }}</p>

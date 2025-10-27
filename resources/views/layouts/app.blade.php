@@ -76,7 +76,7 @@
               3. Hapus 'p-4' dari <nav> karena padding sudah diatur di dalam sidebar.
             --}}
             <aside class="w-64 min-h-full 
-                          bg-gradient-to-b from-white via-gray-50 to-gray-100 text-gray-800 
+                          bg-slate-300 from-black via-gray-50 to-gray-100 text-white
                           shadow-md rounded-r-2xl overflow-hidden">
                 
                 {{-- Kita buat <nav> ini membungkus sidebar dan mengelola scrolling --}}

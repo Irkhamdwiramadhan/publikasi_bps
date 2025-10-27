@@ -69,13 +69,6 @@ class DashboardController extends Controller
                         ->distinct()
                         ->pluck('status');
 
-    dd([
-        'Tahun Dipilih' => $selectedYear,
-        'Hitungan Status ARC (Query)' => $arcStatusCounts,
-        'Hitungan Status Non-ARC (Query)' => $nonArcStatusCounts,
-        'Status Aktual di DB (Tahun ' . $selectedYear . ')' => $actualStatuses, 
-    ]);
-
     // ... (return view) ...
 
 

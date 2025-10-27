@@ -10,6 +10,7 @@ use App\Http\Controllers\SubmissionPublicationController;
 use App\Http\Controllers\SpnsrController;
 use App\Http\Controllers\DashboardController;
 
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -24,7 +25,7 @@ Route::get('/test-route', function () {
 
 
 Route::get('/', function () {
-    return view('welcome');
+    return view('auth.login');
 });
 
 // Route untuk Dashboard
@@ -82,6 +83,40 @@ Route::middleware('auth')->group(function () {
 
     // PERBAIKI BAGIAN INI: Pastikan ini adalah 'generatePDF'
     Route::post('/cetak-spnsr', [SpnsrController::class, 'generatePDF'])->name('spnsr.generate');
+    Route::middleware(['auth'])->group(function () {
+        // Grup untuk SPNSR
+        Route::prefix('spnsr')->name('spnsr.')->group(function () {
+            // Halaman index (daftar pengajuan)
+            Route::get('/', [SpnsrController::class, 'index'])->name('index');
+
+            // Halaman form tambah pengajuan
+            Route::get('/create', [SpnsrController::class, 'create'])->name('create');
+
+            // Proses simpan pengajuan baru
+            Route::post('/', [SpnsrController::class, 'store'])->name('store');
+
+            // Generate/Tampilkan PDF (detail)
+            // Kita pakai GET karena ini aksi melihat detail/PDF
+            Route::get('/{submission}/pdf', [SpnsrController::class, 'generatePDF'])->name('pdf');
+
+            // Halaman form edit status (hanya Pemimpin)
+            Route::get('/{submission}/edit', [SpnsrController::class, 'edit'])
+                ->middleware(['role:Pemimpin']) // Lindungi dengan role
+                ->name('edit');
+
+            // Proses update status (hanya Pemimpin)
+            Route::put('/{submission}', [SpnsrController::class, 'update'])
+                ->middleware(['role:Pemimpin']) // Lindungi dengan role
+                ->name('update');
+            // ROUTE BARU: Untuk update status via AJAX dari halaman index
+        Route::patch('/{submission}/update-status', [SpnsrController::class, 'updateStatusAjax'])
+             // Hanya Pemimpin
+             ->name('updateStatusAjax');
+
+            // Opsi: Hapus pengajuan (jika perlu)
+            // Route::delete('/{submission}', [SpnsrController::class, 'destroy'])->name('destroy');
+        });
+    });
 });
 
 require __DIR__ . '/auth.php';

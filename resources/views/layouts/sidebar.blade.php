@@ -3,8 +3,8 @@
     class="flex items-center gap-3 px-6 py-5 border-b border-gray-200 hover:bg-blue-50 transition-all duration-300">
     <img src="{{ asset('images/logo_bps.png') }}" class="h-10 w-auto" alt="Logo BPS" />
     <div>
-        <h1 class="font-bold text-base text-gray-800">Aplikasi Publikasi</h1>
-        <p class="text-xs text-gray-500">BPS Kabupaten Tegal</p>
+        <h1 class="font-bold text-base text-black">Aplikasi Publikasi</h1>
+        <p class="text-xs text-gray-700">BPS Kabupaten Tegal</p>
     </div>
 </a>
 
@@ -32,7 +32,7 @@
     <li class="mt-3">
         <details open class="group">
             <summary
-                class="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all duration-300">
+                class="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer text-gray-800 hover:bg-blue-50 hover:text-blue-700 transition-all duration-300">
                 <svg xmlns="http://www.w3.org/2000/svg"
                     class="h-5 w-5 opacity-75 transform transition-transform duration-300 group-hover:rotate-12"
                     fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -47,7 +47,7 @@
                         class="block rounded-lg px-3 py-1.5 transition-all duration-300 group
                               {{ request()->routeIs('publications.*') 
                                   ? 'bg-blue-100 text-blue-700 font-medium' 
-                                  : 'text-gray-600 hover:bg-blue-50 hover:text-blue-700' }}">
+                                  : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700' }}">
                         <span class="inline-flex items-center gap-2">
                             <svg xmlns="http://www.w3.org/2000/svg"
                                 class="h-4 w-4 opacity-80 transform transition-transform duration-300 group-hover:scale-125 group-hover:-rotate-6"
@@ -64,7 +64,7 @@
                         class="block rounded-lg px-3 py-1.5 transition-all duration-300 group
                               {{ request()->routeIs('users.*') 
                                   ? 'bg-blue-100 text-blue-700 font-medium' 
-                                  : 'text-gray-600 hover:bg-blue-50 hover:text-blue-700' }}">
+                                  : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700' }}">
                         <span class="inline-flex items-center gap-2">
                             <svg xmlns="http://www.w3.org/2000/svg"
                                 class="h-4 w-4 opacity-80 transform transition-transform duration-300 group-hover:scale-125 group-hover:rotate-6"
@@ -101,7 +101,7 @@
                         class="block rounded-lg px-3 py-1.5 transition-all duration-300 group
                               {{ request()->routeIs('sprp.*') 
                                   ? 'bg-blue-100 text-blue-700 font-medium' 
-                                  : 'text-gray-600 hover:bg-blue-50 hover:text-blue-700' }}">
+                                  : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700' }}">
                         <span class="inline-flex items-center gap-2">
                             <svg xmlns="http://www.w3.org/2000/svg"
                                 class="h-4 w-4 transform transition-transform duration-300 group-hover:scale-125 group-hover:-rotate-6"
@@ -118,7 +118,7 @@
                         class="block rounded-lg px-3 py-1.5 transition-all duration-300 group
                               {{ request()->routeIs('pengajuan_publikasi.*') 
                                   ? 'bg-blue-100 text-blue-700 font-medium' 
-                                  : 'text-gray-600 hover:bg-blue-50 hover:text-blue-700' }}">
+                                  : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700' }}">
                         <span class="inline-flex items-center gap-2">
                             <svg xmlns="http://www.w3.org/2000/svg"
                                 class="h-4 w-4 transform transition-transform duration-300 group-hover:scale-125 group-hover:rotate-6"
@@ -141,7 +141,7 @@
             class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium transition-all duration-300 group
                   {{ request()->routeIs('panduan.index') 
                       ? 'bg-blue-600 text-white shadow-md' 
-                      : 'text-gray-700 hover:bg-blue-100 hover:text-blue-700' }}">
+                      : 'text-gray-800 hover:bg-blue-100 hover:text-blue-700' }}">
             <svg xmlns="http://www.w3.org/2000/svg"
                 class="h-5 w-5 opacity-80 transform transition-transform duration-300 group-hover:scale-125 group-hover:-rotate-6"
                 fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -154,11 +154,11 @@
 
     {{-- Cetak SPNRS --}}
     <li>
-        <a href="{{ route('spnsr.create') }}"
+        <a href="{{ route('spnsr.index') }}"
             class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium transition-all duration-300 group
                   {{ request()->routeIs('spnsr.create') 
                       ? 'bg-blue-600 text-white shadow-md' 
-                      : 'text-gray-700 hover:bg-blue-100 hover:text-blue-700' }}">
+                      : 'text-gray-800 hover:bg-blue-100 hover:text-blue-700' }}">
             <svg xmlns="http://www.w3.org/2000/svg"
                 class="h-5 w-5 opacity-80 transform transition-transform duration-300 group-hover:scale-125 group-hover:rotate-6"
                 fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -170,7 +170,7 @@
     </li>
 </ul>
 
-<div class="p-5 border-t border-gray-200 bg-gradient-to-r from-blue-50 to-white">
+<div class="p-5 border-t border-gray-200 bg-slate-300 from-blue-50 to-white">
     <a href="{{ route('profile.edit') }}"
         class="flex items-center gap-3 rounded-xl p-2 hover:bg-blue-100 transition-all duration-300 group">
         <div
