@@ -118,14 +118,14 @@
                                     </div>
 
                                     {{-- SPNRS Ketua Tim --}}
-                                    <div class="form-control w-full">
+                                    <!-- <div class="form-control w-full">
                                         <label for="spnrs_ketua_tim" class="block text-sm font-semibold text-base-content/80 mb-1">SPNRS dari Ketua Tim</label>
                                         <input id="spnrs_ketua_tim" type="url" name="spnrs_ketua_tim" class="input input-bordered w-full rounded-[15px] {{ $errors->has('spnrs_ketua_tim') ? 'input-error' : '' }}"
                                                placeholder="https://..." value="{{ old('spnrs_ketua_tim') }}">
                                          @error('spnrs_ketua_tim')
                                             <p class="text-error text-xs mt-2">{{ $message }}</p>
                                         @enderror
-                                    </div>
+                                    </div> -->
                                 </div>
                             </section>
                         </div>

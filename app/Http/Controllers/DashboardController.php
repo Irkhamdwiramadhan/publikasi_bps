@@ -49,7 +49,7 @@ class DashboardController extends Controller
             'disetujui' => $arcStatusCounts->get('disetujui', 0),
             'ditolak' => $arcStatusCounts->get('ditolak', 0),
             // Tambahkan status lain jika ada (misal: 'draft')
-             'publikasi_masuk' => $arcStatusCounts->get('draft', 0) + $arcStatusCounts->get('sedang_diperiksa', 0) + $arcStatusCounts->get('butuh_perbaikan', 0), // Contoh kalkulasi "Publikasi Masuk"
+             'publikasi_masuk' => $arcStatusCounts->get('draft', 0), // Contoh kalkulasi "Publikasi Masuk"
         ];
 
         $nonArcSummary = [
@@ -58,7 +58,7 @@ class DashboardController extends Controller
             'butuh_perbaikan' => $nonArcStatusCounts->get('butuh_perbaikan', 0),
             'disetujui' => $nonArcStatusCounts->get('disetujui', 0),
             'ditolak' => $nonArcStatusCounts->get('ditolak', 0),
-             'publikasi_masuk' => $nonArcStatusCounts->get('draft', 0) + $nonArcStatusCounts->get('sedang_diperiksa', 0) + $nonArcStatusCounts->get('butuh_perbaikan', 0), // Contoh kalkulasi "Publikasi Masuk"
+             'publikasi_masuk' => $nonArcStatusCounts->get('draft', 0), // Contoh kalkulasi "Publikasi Masuk"
         ];
 
         // ... (kode untuk $availableYears, $getCounts, $arcStatusCounts, $nonArcStatusCounts) ...

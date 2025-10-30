@@ -12,7 +12,9 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
         }
-        /* Tambahkan style untuk select2 jika Anda menggunakannya nanti */
+        .rounded-\[15px\] {
+            border-radius: 15px;
+        }
     </style>
 
     {{-- Header Halaman (Konsisten) --}}
@@ -35,14 +37,29 @@
     <div class="py-12 fade-in">
         <div class="px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto">
 
-            <div class="card bg-base-100 shadow-xl">
+             {{-- Alert Notifikasi Flash Message --}}
+            @if (session('success'))
+                <div role="alert" class="alert alert-success mb-5 shadow-lg rounded-[15px]">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <span>{{ session('success') }}</span>
+                </div>
+            @endif
+             @if (session('error'))
+                 <div role="alert" class="alert alert-error mb-5 shadow-lg rounded-[15px]">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <span>{{ session('error') }}</span>
+                </div>
+            @endif
+            {{-- AKHIR NOTIFIKASI --}}
+
+            <div class="card bg-base-100 shadow-xl rounded-[15px]">
                 <div class="card-body p-6 md:p-8">
 
                     <h3 class="text-xl font-bold text-base-content/90 mb-6">Formulir Pengajuan SPNSR</h3>
 
                     {{-- Menampilkan Error Validasi Ringkasan --}}
                     @if ($errors->any())
-                        <div class="alert alert-error mb-6 shadow-lg">
+                        <div class="alert alert-error mb-6 shadow-lg rounded-[15px]">
                             <div>
                                 <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                 <div>
@@ -57,7 +74,7 @@
                         </div>
                     @endif
 
-                    {{-- REVISI: Form action diubah ke spnsr.store --}}
+                    {{-- Form action sudah benar ke spnsr.store --}}
                     <form action="{{ route('spnsr.store') }}" method="POST">
                         @csrf
 
@@ -95,39 +112,35 @@
                                 <h4 class="text-lg font-medium text-base-content/80 border-b border-base-200 pb-2 mb-4">Detail Publikasi</h4>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
 
-                                    {{-- REVISI: Judul Publikasi (Dropdown) --}}
+                                    {{-- REVISI: Dropdown mengambil dari SubmissionPublication --}}
                                     <div class="form-control w-full md:col-span-2">
-                                        <label for="publication_id" class="block text-sm font-semibold text-base-content/80 mb-1">Pilih Judul Publikasi</label>
-                                        {{-- Input hidden untuk menyimpan judul teks --}}
-                                        <input type="hidden" name="judul_publikasi" id="judul_publikasi_text" value="{{ old('judul_publikasi') }}">
-                                        {{-- Input hidden untuk menyimpan tipe arc --}}
-                                        <input type="hidden" name="tipe_arc" id="tipe_arc_text" value="{{ old('tipe_arc') }}">
+                                        <label for="submission_publication_id" class="block text-sm font-semibold text-base-content/80 mb-1">Pilih Pengajuan Publikasi Terkait</label>
+                                        
+                                        {{-- Hapus hidden input (tidak perlu lagi) --}}
+                                        {{-- <input type="hidden" name="judul_publikasi" ... > --}}
+                                        {{-- <input type="hidden" name="tipe_arc" ... > --}}
 
-                                        <select id="publication_id" name="publication_id" class="select select-bordered w-full rounded-[15px] {{ $errors->has('publication_id') ? 'select-error' : '' }}" required>
-                                            <option value="" disabled {{ old('publication_id') ? '' : 'selected' }}>-- Cari & Pilih Publikasi --</option>
-                                            @foreach ($publications as $pub)
-                                                <option value="{{ $pub->id }}"
-                                                        data-title="{{ $pub->title_ind }}"
-                                                        data-type="{{ $pub->publication_type }}"
-                                                        @selected(old('publication_id') == $pub->id)>
-                                                    [{{ $pub->publication_type }}] {{ $pub->title_ind }}
+                                        <select id="submission_publication_id" name="submission_publication_id" class="select select-bordered w-full rounded-[15px] {{ $errors->has('submission_publication_id') ? 'select-error' : '' }}" required>
+                                            <option value="" disabled {{ old('submission_publication_id') ? '' : 'selected' }}>-- Pilih Pengajuan Publikasi (oleh Anda) --</option>
+                                            
+                                            {{-- REVISI: Loop $pendingSubmissions --}}
+                                            @forelse ($pendingSubmissions as $submission)
+                                                <option value="{{ $submission->id }}"
+                                                        @selected(old('submission_publication_id') == $submission->id)>
+                                                    {{-- Tampilkan judul dari relasi master publication --}}
+                                                    [{{ $submission->publication?->publication_type ?? 'N/A' }}] {{ $submission->publication?->title_ind ?? 'Judul Tidak Ditemukan' }} (Diajukan: {{ $submission->created_at->format('d M Y') }})
                                                 </option>
-                                            @endforeach
+                                            @empty
+                                                <option value="" disabled>Anda tidak memiliki pengajuan publikasi yang menunggu SPNSR.</option>
+                                            @endforelse
                                         </select>
-                                        @error('publication_id') {{-- Error untuk ID --}}
-                                            <p class="text-error text-xs mt-2">{{ $message }}</p>
-                                        @enderror
-                                         @error('judul_publikasi') {{-- Error untuk teks judul jika diperlukan --}}
-                                            <p class="text-error text-xs mt-2">{{ $message }}</p>
-                                        @enderror
-                                         @error('tipe_arc') {{-- Error untuk tipe arc jika diperlukan --}}
+                                        @error('submission_publication_id')
                                             <p class="text-error text-xs mt-2">{{ $message }}</p>
                                         @enderror
                                     </div>
-                                    {{-- AKHIR REVISI JUDUL --}}
 
-                                    {{-- Keterangan (Pindah ke sini agar layout seimbang) --}}
-                                    <div class="form-control w-full md:col-span-2"> {{-- Dibuat full width --}}
+                                    {{-- Keterangan --}}
+                                    <div class="form-control w-full md:col-span-2">
                                         <label for="keterangan" class="block text-sm font-semibold text-base-content/80 mb-1">Keterangan <span class="text-gray-400 font-normal">(Opsional)</span></label>
                                         <input id="keterangan" type="text" name="keterangan" value="{{ old('keterangan') }}" class="input input-bordered w-full rounded-[15px] {{ $errors->has('keterangan') ? 'input-error' : '' }}">
                                          @error('keterangan')
@@ -140,8 +153,7 @@
 
                         {{-- Tombol Aksi --}}
                         <div class="flex justify-end items-center mt-8 pt-6 border-t border-base-200 gap-3">
-                            <a href="{{ route('spnsr.index') }}" class="btn btn-ghost">Batal</a>
-                             {{-- REVISI: Tombol Simpan --}}
+                            <a href="{{ route('spnsr.index') }}" class="btn btn-ghost rounded-[15px]">Batal</a>
                             <button type="submit" class="btn btn-primary btn-premium rounded-[15px] text-black">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
                                 Simpan Pengajuan
@@ -153,46 +165,7 @@
         </div>
     </div>
 
-    {{-- REVISI: Tambahkan script untuk update hidden input --}}
-    @push('scripts')
-        {{-- Opsional: Tambahkan Select2 untuk dropdown yang bisa dicari --}}
-        {{-- <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" /> --}}
-        {{-- <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> --}}
-        {{-- <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script> --}}
-
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                const publicationSelect = document.getElementById('publication_id');
-                const judulHiddenInput = document.getElementById('judul_publikasi_text');
-                const tipeHiddenInput = document.getElementById('tipe_arc_text');
-
-                // Inisialisasi Select2 (jika Anda memakainya)
-                // $(publicationSelect).select2({ theme: "bootstrap-5" }); // Contoh tema
-
-                publicationSelect.addEventListener('change', function() {
-                    const selectedOption = this.options[this.selectedIndex];
-                    const title = selectedOption.getAttribute('data-title');
-                    const type = selectedOption.getAttribute('data-type');
-
-                    if (judulHiddenInput) {
-                        judulHiddenInput.value = title || '';
-                    }
-                     if (tipeHiddenInput) {
-                        tipeHiddenInput.value = type || '';
-                    }
-                });
-
-                // Set initial value on page load if old value exists
-                if (publicationSelect.value) {
-                     const selectedOption = publicationSelect.options[publicationSelect.selectedIndex];
-                     const title = selectedOption.getAttribute('data-title');
-                     const type = selectedOption.getAttribute('data-type');
-                     if (judulHiddenInput) judulHiddenInput.value = title || '';
-                     if (tipeHiddenInput) tipeHiddenInput.value = type || '';
-                }
-
-            });
-        </script>
-    @endpush
+    {{-- REVISI: Hapus @push('scripts') karena tidak ada lagi hidden input --}}
 
 </x-app-layout>
+

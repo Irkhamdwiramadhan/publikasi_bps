@@ -256,18 +256,21 @@
             <p>Demikian surat persetujuan ini dibuat, untuk dipergunakan sebagaimana mestinya.</p>
         </div>
 
+        {{-- 8. TANDA TANGAN (TANPA GAMBAR TTD UNTUK DRAFT) --}}
         <div class="signature">
-            <p style="margin-bottom: 0;"></p>
-            <p style="margin-top: 0;"></p>
-            {{-- REVISI: Tampilkan gambar TTD & Stempel HANYA jika status 'Disetujui' --}}
-            @if(isset($submission) && $submission->status == 'Disetujui')
-            {{-- Pastikan gambar ada di public/images/ttd.png --}}
-            <img src="{{ public_path('images/foto.png') }}" class="signature-image">
-            @endif
-
+            <p style="margin-bottom: 0;">Mengetahui,</p>
+            <p style="margin-top: 0;">Kepala BPS Kabupaten Tegal</p>
+            
+            {{-- REVISI: Gambar TTD & Stempel DIHAPUS dari template DRAFT --}}
+            {{-- @if(isset($submission) && $submission->status == 'Disetujui')
+                <img src="{{ public_path('images/ttd_stempel_kepala.png') }}" class="signature-image">
+            @endif --}}
+            
             <div class="nama-ttd">
-                <p style="margin-bottom: 0;"></p>
+                <p style="margin-bottom: 0;">{{ $penanda_tangan['nama'] }}</p>
             </div>
+             {{-- Opsional: Tampilkan NIP jika perlu --}}
+             {{-- <p style="margin-top: 2px; font-size: 10pt;">NIP. {{ $penanda_tangan['nip'] }}</p> --}}
         </div>
 
     </div>

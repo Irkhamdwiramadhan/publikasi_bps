@@ -7,7 +7,7 @@ use App\Models\Publication;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Comment;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests; // [REVISI 1] Import Trait
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class SubmissionPublicationController extends Controller
 {
@@ -16,24 +16,24 @@ class SubmissionPublicationController extends Controller
      */
     public function index()
     {
-        $query = SubmissionPublication::with(['publication', 'user']);
+        // REVISI: Tambahkan eager load 'publication.spnsrSubmission'
+        // Ini akan mengambil pengajuan, lalu master publikasinya, 
+        // lalu SPNSR yang terkait dengan master publikasi tsb.
+        $query = SubmissionPublication::with([
+            'user', 
+            'publication', 
+            'publication.spnsrSubmission'
+        ]);
 
-        // Logika "Pintar":
-        // [REVISI] Ejaan yang benar adalah hasAnyRole (dengan R)
+        // Logika "Pintar" Anda untuk memfilter data (sudah benar)
         if (Auth::user()->hasRole('Penyusun') && !Auth::user()->hasAnyRole(['Pemeriksa', 'Admin'])) {
             $query->where('user_id', Auth::id());
         }
-
-        // Jika dia 'Pemeriksa' atau 'Admin', if di atas akan diabaikan
-        // dan semua data akan ditampilkan.
 
         $submissions = $query->latest()->paginate(10);
 
         return view('pengajuan_publikasi.index', compact('submissions'));
     }
-
-
-
 
     /**
      * Tampilkan form tambah publikasi.
@@ -67,7 +67,8 @@ class SubmissionPublicationController extends Controller
 
         return redirect()->route('pengajuan_publikasi.index')->with('success', 'Publikasi berhasil diajukan!');
     }
-    // SubmissionPublicationController.php
+    
+    // Method updateStatus
     public function updateStatus(Request $request, $id)
     {
         $submission = SubmissionPublication::findOrFail($id);
@@ -77,46 +78,37 @@ class SubmissionPublicationController extends Controller
         return response()->json(['success' => true]);
     }
 
-
+    // Method comment
     public function comment(SubmissionPublication $submission)
     {
         $submission->load('comments.user', 'publication'); // Eager load relasi
         return view('pengajuan_publikasi.comment', ['submission' => $submission]);
     }
 
-    /**
-     * [REVISI TOTAL] Menggunakan Route Model Binding dan Relasi
-     */
+    // Method storeComment
     public function storeComment(Request $request, SubmissionPublication $submission)
     {
-        // [REVISI] Validasi 'body' (sesuai nama field di comment.blade.php)
         $request->validate([
             'body' => 'required|string|max:2000',
         ]);
 
-        // [REVISI] Menggunakan relasi 'comments()' yang sudah kita buat
-        // Ini jauh lebih bersih dan otomatis mengisi foreign key.
         $submission->comments()->create([
-            'body' => $request->body,       // dari <textarea name="body">
-            'user_id' => Auth::id(),     // user yang sedang login
+            'body' => $request->body,
+            'user_id' => Auth::id(),
         ]);
 
         return redirect()->route('pengajuan_publikasi.comment', $submission->id)
             ->with('success', 'Komentar berhasil dikirim.');
     }
 
+    // Method edit
     public function edit(SubmissionPublication $submission)
     {
-        // [FIX 1] Eager load relasi 'publication' dan 'user'
-        // Ini untuk memperbaiki error 500 (property of non-object) di view Blade
         $submission->load(['publication', 'user']);
 
-        // [FIX 2] Logika query yang disarankan sebelumnya
-        // Ambil ID publikasi yang sudah diajukan, KECUALI yang sedang diedit ini.
         $submittedPublicationIds = SubmissionPublication::where('id', '!=', $submission->id)
             ->pluck('publication_id');
 
-        // Ambil semua publikasi yang TIDAK ada di daftar itu.
         $publications = Publication::whereNotIn('id', $submittedPublicationIds)
             ->select('id', 'title_ind', 'publication_type')
             ->orderBy('title_ind')
@@ -128,6 +120,7 @@ class SubmissionPublicationController extends Controller
         ]);
     }
 
+    // Method update
     public function update(Request $request, SubmissionPublication $submission)
     {
         $request->validate([
