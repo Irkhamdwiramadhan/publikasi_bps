@@ -201,12 +201,19 @@
 
                                                 @hasanyrole('Pemeriksa|Penyusun|Admin')
                                                 <div class="tooltip tooltip-left" data-tip="Lihat/Tambah Komentar">
-                                                    <a href="{{ route('pengajuan_publikasi.comment', $item->id) }}"
-                                                       class="btn btn-ghost btn-xs btn-circle text-info hover:bg-info/10">
-                                                       {{-- Ikon SVG Komentar --}}
-                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
-                                                    </a>
-                                                </div>
+   <a href="{{ route('pengajuan_publikasi.comment', $item->id) }}"
+   class="btn btn-ghost btn-xs btn-circle text-info hover:bg-info/10 relative">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+    </svg>
+
+    @if($item->unread_count > 0)
+        <span class="badge badge-xs badge-error absolute -top-1 -right-1">{{ $item->unread_count }}</span>
+    @endif
+</a>
+
+</div>
+
                                                 @endhasanyrole
                                                 
                                                 @role('Admin')

@@ -41,12 +41,12 @@
         <div class="header-bar flex flex-col md:flex-row justify-between items-center">
             <div>
                 <h2 class="dashboard-title text-2xl font-bold leading-tight">
-                    📊 {{ __('Dasbor') }}
+                    📊 {{ __('Dasboard') }}
                 </h2>
                 <div class="text-sm breadcrumbs text-blue-100 mt-1">
                     <ul>
                         <li><a href="{{ route('dashboard') }}" class="hover:text-white">Beranda</a></li> 
-                        <li>Dasbor</li>
+                        <li>Dasboard</li>
                     </ul>
                 </div>
             </div>

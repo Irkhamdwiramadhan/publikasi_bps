@@ -13,26 +13,21 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage; // 👈 Penting untuk file upload/download
 use Barryvdh\DomPDF\Facade\Pdf;
-use Carbon\Carbon;
+use Carbon\Carbon; // <-- ▼▼▼ PERBAIKAN 1: Tambahkan 'use Carbon\Carbon' ▼▼▼
 
 class SpnsrController extends Controller
 {
     /**
      * Menampilkan daftar pengajuan SPNSR.
-     * Pemimpin melihat semua, user lain hanya miliknya.
      */
     public function index()
     {
         $user = Auth::user();
         
-        // REVISI: Eager load relasi baru 'submissionPublication.publication' untuk ambil judul
         $submissionsQuery = SpnsrSubmission::with(['user', 'submissionPublication.publication']) 
                             ->orderBy('created_at', 'desc');
 
-        // REVISI: Filter diaktifkan kembali
-       
-
-        $submissions = $submissionsQuery->paginate(15); // Ambil data dengan paginasi
+        $submissions = $submissionsQuery->paginate(15); 
 
         return view('spnsr.index', compact('submissions'));
     }
@@ -42,15 +37,12 @@ class SpnsrController extends Controller
      */
     public function create()
     {
-        // REVISI: Ambil PENGIRIMAN PUBLIKASI (bukan master) yang dibuat user ini
-        // dan yang BELUM punya SPNSR
         $pendingSubmissions = SubmissionPublication::where('user_id', Auth::id())
-                                ->whereDoesntHave('spnsrSubmission') // Cek yang belum punya SPNSR
-                                ->with('publication') // Ambil data masternya untuk judul
+                                ->whereDoesntHave('spnsrSubmission') 
+                                ->with('publication') 
                                 ->orderBy('created_at', 'desc')
                                 ->get();
 
-        // REVISI: Mengirim data $pendingSubmissions ke view 'spnsr.create'
         return view('spnsr.create_simple', compact('pendingSubmissions')); 
     }
 
@@ -59,30 +51,27 @@ class SpnsrController extends Controller
      */
     public function store(Request $request)
     {
-        // REVISI: Validasi disesuaikan dengan arsitektur baru
+        // Validasi disesuaikan dengan arsitektur baru
         $validatedData = $request->validate([
             'nomor_surat'    => 'required|string|max:100|unique:spnsr_submissions,nomor_surat',
             'tanggal_prosa'  => 'required|string|max:255',
-            'submission_publication_id' => 'required|exists:submission_publications,id|unique:spnsr_submissions,submission_publication_id', // 👈 REVISI KUNCI
+            'submission_publication_id' => 'required|exists:submission_publications,id|unique:spnsr_submissions,submission_publication_id', 
             'keterangan'     => 'nullable|string|max:255',
-             // Hapus validasi 'publication_id', 'judul_publikasi', 'tipe_arc'
+            'tanggal_rilis'  => 'required|date', // 👈 Validasi tanggal rilis (Sudah benar)
         ]);
 
         // Buat record baru di database
         SpnsrSubmission::create([
-             'user_id' => Auth::id(), // ID user yang login (penyusun)
-             
-             // ---------------------------------------------------
-             // REVISI KRITIS: Simpan foreign key yang benar
+             'user_id' => Auth::id(), 
              'submission_publication_id' => $validatedData['submission_publication_id'], 
-             // ---------------------------------------------------
-
              'nomor_surat' => $validatedData['nomor_surat'],
              'tanggal_prosa' => $validatedData['tanggal_prosa'],
-             'keterangan' => $validatedData['keterangan'],
-             'status' => 'Draft', // Status awal selalu 'Draft'
              
-             // Hapus 'publication_id', 'judul_publikasi', 'tipe_arc'
+             // ▼▼▼ PERBAIKAN 2: Tambahkan tanggal_rilis di sini ▼▼▼
+             'tanggal_rilis' => $validatedData['tanggal_rilis'],
+             
+             'keterangan' => $validatedData['keterangan'],
+             'status' => 'Draft', 
         ]);
 
         return redirect()->route('spnsr.index')->with('success', 'Pengajuan SPNSR berhasil disimpan sebagai Draft.');
@@ -102,12 +91,22 @@ class SpnsrController extends Controller
              return redirect()->back()->with('error', 'Data publikasi terkait tidak ditemukan.');
          }
 
+         // ▼▼▼ PERBAIKAN 3: Format tanggal rilis ▼▼▼
+         // Mengonversi tanggal rilis ke format Indonesia
+         $tanggal_rilis_formatted = $submission->tanggal_rilis 
+                                    ? Carbon::parse($submission->tanggal_rilis)->isoFormat('D MMMM YYYY') 
+                                    : 'N/A'; // Fallback jika (karena data lama) null
+
          // Menyiapkan data untuk dikirim ke view PDF
          $data = [
             'nomor'         => $submission->nomor_surat,
             'tanggal_prosa' => $submission->tanggal_prosa,
-            'judul'         => $publication->title_ind, // 👈 REVISI: Ambil dari relasi
-            'tipe_arc'      => $publication->publication_type, // 👈 REVISI: Ambil dari relasi
+            'judul'         => $publication->title_ind, 
+            'tipe_arc'      => $publication->publication_type, 
+
+            // ▼▼▼ PERBAIKAN 4: Tambahkan tanggal_rilis ke $data array ▼▼▼
+            'tanggal_rilis' => $tanggal_rilis_formatted,
+
             'keterangan'    => $submission->keterangan ?? '',
             'tanggal_surat_dibuat' => $submission->created_at->isoFormat('D MMMM YYYY'), 
             'submission'    => $submission,
@@ -115,14 +114,14 @@ class SpnsrController extends Controller
                 'nama' => 'Bambang Wahyu Ponco Aji, SST, M.Si.',
                 'jabatan' => 'Kepala',
                 'unit_kerja'=> 'BPS Kabupaten Tegal',
-                'nip' => '(NIP Penanda Tangan)'
+                'nip' => '340016221'
             ],
         ];
 
         // Gunakan template PDF yang TIDAK menampilkan TTD
         $pdf = PDF::loadView('spnsr.template_pdf_draft', $data); // Pastikan view ini ada
 
-        return $pdf->download('SPNSR_DRAFT_' . preg_replace('/[^A-Za-z0-9_\-]/', '_', $data['nomor']) . '.pdf');
+        return $pdf->download('SPNSR_DRAFT_' | preg_replace('/[^A-Za-z0-9_\-]/', '_', $data['nomor']) . '.pdf');
     }
 
     /**
@@ -134,9 +133,6 @@ class SpnsrController extends Controller
         $request->validate([
             'signed_spnsr_file' => 'required|file|mimes:pdf|max:5120', // Hanya PDF, maks 5MB
         ]);
-
-        // Cek apakah user adalah Pemimpin (double check, selain middleware)
-         
 
         // Hapus file lama jika ada (opsional)
         if ($submission->signed_spnsr_path && Storage::disk('public')->exists($submission->signed_spnsr_path)) {
@@ -171,6 +167,4 @@ class SpnsrController extends Controller
         return redirect()->back()->with('error', 'File SPNSR bertanda tangan tidak ditemukan atau belum disetujui.');
     }
     
-    // REVISI: Hapus method edit(), update(), dan updateStatusAjax() yang sudah tidak relevan
 }
-

@@ -13,9 +13,11 @@ class SubmissionComment extends Model
      * [REVISI] Atribut yang boleh diisi
      */
     protected $fillable = [
-        'submission_publication_id', // Diperbarui
-        'user_id',
         'body',
+        'user_id',
+        'role',  // <<< HARUS ADA
+        'is_read',
+        'submission_publication_id',
     ];
 
     /**

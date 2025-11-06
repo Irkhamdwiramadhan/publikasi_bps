@@ -7,7 +7,8 @@
 
         <!-- Input Nama -->
         <div>
-            <x-input-label class="text-black" for="name" :value="__('Nama Lengkap (dengan pangkat)')" />
+            <x-input-label for="name" :value="__('Nama Lengkap (dengan pangkat)')" class="!text-black font-semibold" />
+
             <x-text-input id="name" class="block mt-1 w-full border-gray-400 text-black placeholder-gray-500 focus:border-black focus:ring-black" 
                 type="text" name="name" :value="old('name')" required autofocus autocomplete="name" />
             <x-input-error :messages="$errors->get('name')" class="mt-2 text-red-600" />
@@ -15,7 +16,7 @@
 
         <!-- Password -->
         <div class="mt-4">
-            <x-input-label class="text-black" for="password" :value="__('Password')" />
+            <x-input-label for="password" :value="__('Password')" class="!text-black font-semibold"/>
             <x-text-input id="password" class="block mt-1 w-full border-gray-400 text-black placeholder-gray-500 focus:border-black focus:ring-black"
                 type="password"
                 name="password"

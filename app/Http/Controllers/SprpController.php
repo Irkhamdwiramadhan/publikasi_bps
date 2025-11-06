@@ -44,7 +44,7 @@ class SprpController extends Controller
      */
     public function store(Request $request)
     {
-        // Validasi data form
+        // Validasi data form (Ini tetap sama)
         $validatedData = $request->validate([
             'publication_id' => 'required|exists:publications,id',
             'jumlah_romawi' => 'nullable|string|max:10',
@@ -52,20 +52,51 @@ class SprpController extends Controller
             'kategori' => 'required|string|max:255',
             'isbn' => 'nullable|string|max:50',
             'issn' => 'nullable|string|max:50',
-            
-            // [REVISI] Mengubah validasi dari 'pembuat_cover_id' ke 'pembuat_cover'
-            'pembuat_cover' => 'required|string|max:255', 
-            
+            'pembuat_cover' => 'required|string|max:255',
             'orientasi' => 'required|string',
             'diterbitkan_untuk' => 'required|string',
             'ukuran_kertas' => 'required|string',
         ]);
+
+        // =======================================================
+        // ▼▼▼ LOGIKA GENERATE NOMOR PUBLIKASI BARU ▼▼▼
+        // =======================================================
+
+        // 1. Tentukan prefix statis
+        $prefix = '33280';
+
+        // 2. Ambil 2 digit tahun ini (misal: '25' untuk 2025)
+        $tahun = date('y');
+
+        // 3. Ambil tahun penuh (misal: '2025') untuk query
+        $tahunSekarang = date('Y');
+        
+        // 4. Hitung data SPRP yang sudah ada di tahun ini
+        $urutanTahunIni = Sprp::whereYear('created_at', $tahunSekarang)->count();
+        
+        // 5. Nomor urut baru adalah (jumlah sebelumnya + 1)
+        $nomorUrut = $urutanTahunIni + 1;
+
+        // 6. Format nomor urut menjadi 3 digit (misal: 1 -> '001', 20 -> '020')
+        $nomorUrutPadded = str_pad($nomorUrut, 3, '0', STR_PAD_LEFT);
+
+        // 7. Gabungkan semua bagian menjadi format final
+        // Hasil: "33280.25020"
+        $nomorPublikasiFinal = $prefix . '.' . $tahun . $nomorUrutPadded;
+
+        // =======================================================
+        // ▲▲▲ AKHIR LOGIKA GENERATE NOMOR ▲▲▲
+        // =======================================================
+
 
         // Tambahkan ID user yang sedang login (Penyusun)
         $validatedData['user_id'] = Auth::id();
         
         // Tambahkan status default (sesuai migrasi)
         $validatedData['status'] = 'Sedang diperiksa'; 
+
+        // [REVISI] Tambahkan nomor publikasi yang baru dibuat secara otomatis
+        $validatedData['nomor_publikasi_final'] = $nomorPublikasiFinal;
 
         // Buat data SPRP baru
         Sprp::create($validatedData);

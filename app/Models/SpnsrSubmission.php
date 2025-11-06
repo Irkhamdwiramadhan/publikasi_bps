@@ -34,6 +34,7 @@ class SpnsrSubmission extends Model
         'keterangan',
         'status',
         'signed_spnsr_path', // 👈 Path file TTD Pemimpin
+        'tanggal_rilis', // 👈 REVISI: Kolom baru untuk tanggal rilis
     ];
 
     /**

@@ -8,20 +8,20 @@
 
         <!-- Logo lebih besar dengan efek hover -->
         <div class="relative">
-            <img src="{{ asset('images/logo_sipintar.png') }}"
-                class="h-20 w-auto drop-shadow-md transition-transform duration-300 hover:rotate-3 hover:scale-110"
+            <img src="{{ asset('images/guci.png') }}"
+                class="h-20 transition-transform duration-300 hover:rotate-3 hover:scale-110"
                 alt="Logo BPS" />
         </div>
 
         <div>
             <h1 class="font-extrabold text-2xl bg-gradient-to-r from-white via-white  
                bg-clip-text text-transparent tracking-wide">
-                SIPINTAR
+                GUCI
             </h1>
 
             <p class="text-sm font-medium bg-gradient-to-r from-white to-white 
                   bg-clip-text text-transparent animate-pulse">
-                BPS Kabupaten Tegal
+                Guides For Creating Publications
             </p>
         </div>
     </a>
@@ -122,9 +122,9 @@
                     <li>
                         <a href="{{ route('sprp.index') }}"
                             class="block rounded-lg px-3 py-1.5 transition-all duration-300 group
-                                  {{ request()->routeIs('sprp.*') 
-                                      ? 'bg-blue-600 text-white font-medium' 
-                                      : 'text-gray-800 hover:bg-blue-200/60 hover:text-blue-800' }}">
+                           {{ request()->routeIs('sprp.*') 
+                               ? 'bg-blue-600 text-white font-medium' 
+                               : 'text-gray-800 hover:bg-blue-200/60 hover:text-blue-800' }}">
                             <span class="inline-flex items-center gap-2">
                                 <svg xmlns="http://www.w3.org/2000/svg"
                                     class="h-4 w-4 transform transition-transform duration-300 group-hover:scale-125 group-hover:-rotate-6"
@@ -139,9 +139,9 @@
                     <li>
                         <a href="{{ route('pengajuan_publikasi.index') }}"
                             class="block rounded-lg px-3 py-1.5 transition-all duration-300 group
-                                  {{ request()->routeIs('pengajuan_publikasi.*') 
-                                      ? 'bg-blue-600 text-white font-medium' 
-                                      : 'text-gray-800 hover:bg-blue-200/60 hover:text-blue-800' }}">
+                           {{ request()->routeIs('pengajuan_publikasi.*') 
+                               ? 'bg-blue-600 text-white font-medium' 
+                               : 'text-gray-800 hover:bg-blue-200/60 hover:text-blue-800' }}">
                             <span class="inline-flex items-center gap-2">
                                 <svg xmlns="http://www.w3.org/2000/svg"
                                     class="h-4 w-4 transform transition-transform duration-300 group-hover:scale-125 group-hover:rotate-6"
@@ -153,6 +153,28 @@
                             </span>
                         </a>
                     </li>
+
+                    {{-- ▼▼▼ INI MENU BARU YANG DITAMBAHKAN ▼▼▼ --}}
+                    <li>
+                        <a href="{{ route('brs.index') }}"
+                            class="block rounded-lg px-3 py-1.5 transition-all duration-300 group
+                           {{ request()->routeIs('brs.*') 
+                               ? 'bg-blue-600 text-white font-medium' 
+                               : 'text-gray-800 hover:bg-blue-200/60 hover:text-blue-800' }}">
+                            <span class="inline-flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg"
+                                    class="h-4 w-4 transform transition-transform duration-300 group-hover:scale-125 group-hover:-rotate-6"
+                                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    {{-- Icon Bar Chart untuk BRS --}}
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                </svg>
+                                BRS
+                            </span>
+                        </a>
+                    </li>
+                    {{-- ▲▲▲ BATAS MENU BARU ▲▲▲ --}}
+
                 </ul>
             </details>
         </li>
@@ -171,7 +193,23 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M6 8h12M6 12h12m-9 4h9" />
                 </svg>
-                Cetak SPNRS
+                Surat SPNRS
+            </a>
+        </li>
+        <li>
+            <a href="#" target="_blank"
+                class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium transition-all duration-300 group
+              text-gray-800 hover:bg-blue-200/60 hover:text-blue-800">
+
+                {{-- Icon "photo" untuk "Logo" --}}
+                <svg xmlns="http://www.w3.org/2000/svg"
+                    class="h-5 w-5 opacity-80 transform transition-transform duration-300 group-hover:scale-125 group-hover:-rotate-6"
+                    fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+
+                Logo
             </a>
         </li>
         {{-- Panduan --}}
@@ -195,25 +233,25 @@
 
     <!-- Footer User -->
     <div class="p-5 border-t border-blue-200 bg-blue-100/70">
-    <a href="{{ route('profile.edit') }}"
-        class="flex items-center gap-3 rounded-xl p-2 hover:bg-blue-200 transition-all duration-300 group">
+        <a href="{{ route('profile.edit') }}"
+            class="flex items-center gap-3 rounded-xl p-2 hover:bg-blue-200 transition-all duration-300 group">
 
-        {{-- Inisial Nama User --}}
-        <div
-            class="bg-gradient-to-br from-blue-400 to-blue-600 text-white rounded-full w-10 h-10 flex items-center justify-center font-semibold shadow-inner group-hover:scale-110 transform transition-transform duration-300">
-            <span>{{ strtoupper(substr(Auth::user()->name, 0, 1)) }}</span>
-        </div>
+            {{-- Inisial Nama User --}}
+            <div
+                class="bg-gradient-to-br from-blue-400 to-blue-600 text-white rounded-full w-10 h-10 flex items-center justify-center font-semibold shadow-inner group-hover:scale-110 transform transition-transform duration-300">
+                <span>{{ strtoupper(substr(Auth::user()->name, 0, 1)) }}</span>
+            </div>
 
-        {{-- Informasi Nama dan Role --}}
-        <div class="leading-tight">
-            <p class="font-semibold text-sm text-gray-800">{{ Auth::user()->name }}</p>
+            {{-- Informasi Nama dan Role --}}
+            <div class="leading-tight">
+                <p class="font-semibold text-sm text-gray-800">{{ Auth::user()->name }}</p>
 
-            {{-- Tampilkan semua role user, dipisahkan koma --}}
-            <p class="text-xs text-gray-600">
-                {{ Auth::user()->getRoleNames()->implode(', ') }}
-            </p>
-        </div>
-    </a>
-</div>
+                {{-- Tampilkan semua role user, dipisahkan koma --}}
+                <p class="text-xs text-gray-600">
+                    {{ Auth::user()->getRoleNames()->implode(', ') }}
+                </p>
+            </div>
+        </a>
+    </div>
 
 </aside>

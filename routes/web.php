@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SubmissionPublicationController;
 use App\Http\Controllers\SpnsrController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\BrsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -52,6 +53,10 @@ Route::middleware('auth')->group(function () {
         Route::get('publications-export-template', [PublicationController::class, 'exportTemplate'])->name('publications.exportTemplate');
         Route::post('publications-import', [PublicationController::class, 'import'])->name('publications.import');
     });
+    // Rute untuk menyimpan publikasi baru via AJAX dari modal
+    Route::post('/publications/store-ajax', [App\Http\Controllers\PublicationController::class, 'storeAjax'])
+        ->name('publications.storeAjax')
+        ->middleware('auth'); // Pastikan ini dilindungi
 
     /*
     |--------------------------------------------------------------------------
@@ -127,6 +132,9 @@ Route::middleware('auth')->group(function () {
         // 6. Unduh PDF bertanda tangan (semua yang berhak)
         Route::get('/{submission}/download-signed', [SpnsrController::class, 'downloadSignedPdf'])->name('download.signed');
     });
+    Route::resource('brs', BrsController::class)->middleware('auth');
+    // HARUS SEPERTI INI:
+    Route::get('/brs/{brs}', [BrsController::class, 'show'])->name('brs.show');
 });
 
 // --- ROUTE AUTH DEFAULT (LOGIN, RESET PASSWORD DLL) ---

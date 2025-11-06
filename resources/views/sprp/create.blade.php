@@ -1,4 +1,4 @@
-{{-- 
+{{--
     Halaman untuk membuat data SPRP baru (Desain Modern & Rapi)
     Menggunakan Tailwind + struktur grid seragam agar setiap baris tidak berantakan.
 --}}
@@ -12,10 +12,20 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
-        .fade-in { animation: fadeIn 0.6s ease-out forwards; }
+
+        .fade-in {
+            animation: fadeIn 0.6s ease-out forwards;
+        }
 
         .card-modern {
             background: rgba(255, 255, 255, 0.85);
@@ -25,10 +35,17 @@
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
         }
 
-        .label-text { font-weight: 600; color: #1e293b; }
-        .form-section { margin-bottom: 2rem; }
-        .border{
-         
+        .label-text {
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .form-section {
+            margin-bottom: 2rem;
+        }
+
+        .border {
+
             border-radius: 15px;
         }
     </style>
@@ -58,22 +75,22 @@
 
                 {{-- 🔔 Error Validasi --}}
                 @if ($errors->any())
-                    <div class="alert alert-error mb-6 shadow-lg">
-                        <div class="flex gap-3">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current h-6 w-6" fill="none" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                      d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            <div>
-                                <h3 class="font-bold">Terjadi Kesalahan!</h3>
-                                <ul class="list-disc ml-5 text-sm">
-                                    @foreach ($errors->all() as $error)
-                                        <li>{{ $error }}</li>
-                                    @endforeach
-                                </ul>
-                            </div>
+                <div class="alert alert-error mb-6 shadow-lg">
+                    <div class="flex gap-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current h-6 w-6" fill="none" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <div>
+                            <h3 class="font-bold">Terjadi Kesalahan!</h3>
+                            <ul class="list-disc ml-5 text-sm">
+                                @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
                         </div>
                     </div>
+                </div>
                 @endif
 
                 {{-- 🧩 Form --}}
@@ -86,33 +103,42 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div class="col-span-2">
                                 <label class="label"><span class="label-text">Judul Publikasi</span></label>
-                                <select name="publication_id" class="border select select-bordered w-full" required>
-                                    <option value="" disabled selected>-- Pilih Judul Publikasi --</option>
-                                    @foreach($publications as $pub)
+
+                                <div class="flex gap-2">
+                                    {{-- Ini adalah select utama kita. Perhatikan id="select-publication" --}}
+                                    <select name="publication_id" id="select-publication" class="border w-full" required>
+                                        <option value="">-- Pilih Judul Publikasi --</option>
+                                        @foreach($publications as $pub)
                                         <option value="{{ $pub->id }}" {{ old('publication_id') == $pub->id ? 'selected' : '' }}>
                                             [{{ $pub->publication_type }}] {{ $pub->title_ind }}
                                         </option>
-                                    @endforeach
-                                </select>
+                                        @endforeach
+                                    </select>
+
+                                    {{-- Tombol ini akan membuka modal --}}
+                                    <button type="button" onclick="modal_add_publication.showModal()" class="btn btn-outline btn-primary">
+                                        + Tambah
+                                    </button>
+                                </div>
                             </div>
 
                             <div>
                                 <label class="label"><span class="label-text">Kategori Publikasi</span></label>
                                 <select name="kategori" class="border select select-bordered w-full" required>
                                     <option value="" disabled selected>-- Pilih Kategori --</option>
-                                        <option value="Statistik Kesejahteraan Rakyat" {{ old('kategori') == 'Statistik Kesejahteraan Rakyat' ? 'selected' : '' }}>Statistik Kesejahteraan Rakyat</option>
-                                        <option value="Statistik Indonesia" {{ old('kategori') == 'Statistik Indonesia' ? 'selected' : '' }}>Statistik Indonesia</option>
-                                        <option value="Statistik Daerah" {{ old('kategori') == 'Statistik Daerah' ? 'selected' : '' }}>Statistik Daerah</option>
-                                        <option value="Indikator Kesejahteraan Rakyat" {{ old('kategori') == 'Indikator Kesejahteraan Rakyat' ? 'selected' : '' }}>Indikator Kesejahteraan Rakyat</option>
-                                        <option value="PDRB Menurut Lapangan Usaha" {{ old('kategori') == 'PDRB Menurut Lapangan Usaha' ? 'selected' : '' }}>PDRB Menurut Lapangan Usaha</option>
-                                        <option value="PDRB Menurut Pengeluaran" {{ old('kategori') == 'PDRB Menurut Pengeluaran' ? 'selected' : '' }}>PDRB Menurut Pengeluaran</option>
-                                        <option value="PDRB Menurut Lapangan Usaha Triwulanan" {{ old('kategori') == 'PDRB Menurut Lapangan Usaha Triwulanan' ? 'selected' : '' }}>PDRB Menurut Lapangan Usaha Triwulanan</option>
-                                        <option value="PDRB Menurut Pengeluaran Triwulanan" {{ old('kategori') == 'PDRB Menurut Pengeluaran Triwulanan' ? 'selected' : '' }}>PDRB Menurut Pengeluaran Triwulanan</option>
-                                        <option value="PDRB Kabupaten/Kota di Provinsi" {{ old('kategori') == 'PDRB Kabupaten/Kota di Provinsi' ? 'selected' : '' }}>PDRB Kabupaten/Kota di Provinsi</option>
-                                        <option value="PDRB Bulanan Data Sosial Ekonomi" {{ old('kategori') == 'PDRB Bulanan Data Sosial Ekonomi' ? 'selected' : '' }}>PDRB Bulanan Data Sosial Ekonomi</option>
-                                        <option value="Katalog Publikasi" {{ old('kategori') == 'Katalog Publikasi' ? 'selected' : '' }}>Katalog Publikasi</option>
-                                        <option value="Analisis Hasil Survei Kebutuhan Data BPS" {{ old('kategori') == 'Analisis Hasil Survei Kebutuhan Data BPS' ? 'selected' : '' }}>Analisis Hasil Survei Kebutuhan Data BPS</option>
-                                        <option value="Publikasi Lainya" {{ old('kategori') == 'Publikasi Lainya' ? 'selected' : '' }}>Publikasi Lainya</option>
+                                    <option value="Statistik Kesejahteraan Rakyat" {{ old('kategori') == 'Statistik Kesejahteraan Rakyat' ? 'selected' : '' }}>Statistik Kesejahteraan Rakyat</option>
+                                    <option value="Statistik Indonesia" {{ old('kategori') == 'Statistik Indonesia' ? 'selected' : '' }}>Statistik Indonesia</option>
+                                    <option value="Statistik Daerah" {{ old('kategori') == 'Statistik Daerah' ? 'selected' : '' }}>Statistik Daerah</option>
+                                    <option value="Indikator Kesejahteraan Rakyat" {{ old('kategori') == 'Indikator Kesejahteraan Rakyat' ? 'selected' : '' }}>Indikator Kesejahteraan Rakyat</option>
+                                    <option value="PDRB Menurut Lapangan Usaha" {{ old('kategori') == 'PDRB Menurut Lapangan Usaha' ? 'selected' : '' }}>PDRB Menurut Lapangan Usaha</option>
+                                    <option value="PDRB Menurut Pengeluaran" {{ old('kategori') == 'PDRB Menurut Pengeluaran' ? 'selected' : '' }}>PDRB Menurut Pengeluaran</option>
+                                    <option value="PDRB Menurut Lapangan Usaha Triwulanan" {{ old('kategori') == 'PDRB Menurut Lapangan Usaha Triwulanan' ? 'selected' : '' }}>PDRB Menurut Lapangan Usaha Triwulanan</option>
+                                    <option value="PDRB Menurut Pengeluaran Triwulanan" {{ old('kategori') == 'PDRB Menurut Pengeluaran Triwulanan' ? 'selected' : '' }}>PDRB Menurut Pengeluaran Triwulanan</option>
+                                    <option value="PDRB Kabupaten/Kota di Provinsi" {{ old('kategori') == 'PDRB Kabupaten/Kota di Provinsi' ? 'selected' : '' }}>PDRB Kabupaten/Kota di Provinsi</option>
+                                    <option value="PDRB Bulanan Data Sosial Ekonomi" {{ old('kategori') == 'PDRB Bulanan Data Sosial Ekonomi' ? 'selected' : '' }}>PDRB Bulanan Data Sosial Ekonomi</option>
+                                    <option value="Katalog Publikasi" {{ old('kategori') == 'Katalog Publikasi' ? 'selected' : '' }}>Katalog Publikasi</option>
+                                    <option value="Analisis Hasil Survei Kebutuhan Data BPS" {{ old('kategori') == 'Analisis Hasil Survei Kebutuhan Data BPS' ? 'selected' : '' }}>Analisis Hasil Survei Kebutuhan Data BPS</option>
+                                    <option value="Publikasi Lainya" {{ old('kategori') == 'Publikasi Lainya' ? 'selected' : '' }}>Publikasi Lainya</option>
                                 </select>
                             </div>
 
@@ -195,12 +221,121 @@
                         </button>
                     </div>
                 </form>
+                <dialog id="modal_add_publication" class="modal">
+    <div class="modal-box w-11/12 max-w-3xl">
+        <form method="dialog">
+            <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+        </form>
+
+        <h3 class="font-bold text-lg mb-4">Tambah Master Publikasi Baru</h3>
+        
+        {{-- Form ini akan dikirim via AJAX, perhatikan id="form-new-publication" --}}
+       <form id="form-new-publication" class="space-y-4">
+            @csrf
+            
+            {{-- [REVISI] Hanya 2 field yang diisi --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="col-span-2">
+                    <label class="label"><span class="label-text">Judul (Indonesia)</span></label>
+                    <input type="text" name="title_ind" class="border input input-bordered w-full" required>
+                </div>
+                <div>
+                    <label class="label"><span class="label-text">Tipe Publikasi</span></label>
+                    <select name="publication_type" class="border select select-bordered w-full" required>
+                        <option value="" disabled selected>-- Pilih Tipe --</option>
+                        <option value="Non ARC">Non ARC</option>
+                        <option value="ARC">ARC</option>
+                    </select>
+                </div>
+            </div>
+            
+            {{-- Menampilkan pesan error validasi dari AJAX --}}
+            <div id="modal-error-bag" class="text-red-500 text-sm hidden"></div>
+
+            <div class="modal-action">
+                <button type="button" onclick="modal_add_publication.close()" class="btn btn-ghost">Batal</button>
+                <button type="submit" id="btn-save-publication" class="btn btn-primary">Simpan Publikasi</button>
+            </div>
+        </form>
+    </div>
+</dialog>
             </div>
         </div>
     </div>
 
     @push('scripts')
-        <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
-        <script>AOS.init({ duration: 600, once: true });</script>
-    @endpush
+    <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            
+            // 2. Inisialisasi TomSelect pada dropdown
+            var tomselect = new TomSelect("#select-publication", {
+                // Konfigurasi ini mengizinkan pencarian
+                create: false, // Kita tidak pakai 'create' bawaan, karena kita pakai modal
+                sortField: {
+                    field: "text",
+                    direction: "asc"
+                }
+            });
+
+            // 3. Logika untuk menyimpan data dari Modal
+            const formNewPub = document.getElementById('form-new-publication');
+            const saveButton = document.getElementById('btn-save-publication');
+            const errorBag = document.getElementById('modal-error-bag');
+
+            formNewPub.addEventListener('submit', function(e) {
+                e.preventDefault();
+                saveButton.disabled = true;
+                saveButton.innerHTML = "Menyimpan...";
+                errorBag.innerHTML = "";
+                errorBag.classList.add('hidden');
+
+                const formData = new FormData(formNewPub);
+
+                fetch("{{ route('publications.storeAjax') }}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': formData.get('_token'),
+                        'Accept': 'application/json'
+                    },
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Jika SUKSES:
+                        // 1. Tambahkan data baru ke dropdown TomSelect
+                        tomselect.addOption({
+                            value: data.publication.id,
+                            text: data.publication.text
+                        });
+                        // 2. Langsung pilih data baru tersebut
+                        tomselect.setValue(data.publication.id);
+                        // 3. Tutup modal
+                        modal_add_publication.close();
+                        // 4. Reset form modal
+                        formNewPub.reset();
+
+                    } else {
+                        // Jika GAGAL (misal: validasi)
+                        errorBag.innerHTML = data.message || "Terjadi kesalahan.";
+                        errorBag.classList.remove('hidden');
+                    }
+                })
+                .catch(error => {
+                    errorBag.innerHTML = "Error jaringan: " + error.message;
+                    errorBag.classList.remove('hidden');
+                })
+                .finally(() => {
+                    saveButton.disabled = false;
+                    saveButton.innerHTML = "Simpan Publikasi";
+                });
+            });
+
+        });
+    </script>
+@endpush
 </x-app-layout>

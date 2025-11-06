@@ -12,22 +12,21 @@ class UserController extends Controller
 {
     public function index(Request $request)
     {
-        // [MODIFIKASI] Memulai query dengan filter WAJIB: hanya user dengan peran 'Pegawai'
+        // [FILTER] Hanya ambil user dengan role 'Pegawai'
         $query = User::whereHas('roles', function ($query) {
             $query->where('name', 'Pegawai');
         });
 
-        // Menerapkan filter pencarian jika ada
+        // [FILTER] Pencarian berdasarkan nama atau NIP
         if ($request->filled('search')) {
             $search = $request->search;
-            // Kurung `where()` ini penting agar `orWhere` tidak mengganggu query `whereHas` di atas.
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', '%' . $search . '%')
                   ->orWhere('nip_bps', 'like', '%' . $search . '%');
             });
         }
 
-        // Menerapkan filter status jika ada
+        // [FILTER] Berdasarkan status aktif / tidak aktif
         if ($request->filled('status')) {
             if ($request->status == 'aktif') {
                 $query->where('status', 1);
@@ -36,12 +35,14 @@ class UserController extends Controller
             }
         }
 
-        // Mengambil data dengan paginasi
-        $users = $query->with('roles')->latest()->paginate(10);
-        
-        // Mengembalikan view dengan data
+        // [PAGINASI] Urutkan dari user pertama yang diinput
+        $users = $query->with('roles')->orderBy('id', 'asc')->paginate(10);
+
+        // Kirim ke view
         return view('users.index', compact('users'));
     }
+
+
 
     public function create()
     {

@@ -38,17 +38,28 @@ return new class extends Migration
     /**
      * Reverse the migrations.
      */
-    public function down(): void
-    {
-        Schema::table('spnsr_submissions', function (Blueprint $table) {
-            // Tambahkan kembali kolom yang dihapus
+ public function down(): void
+{
+    Schema::table('spnsr_submissions', function (Blueprint $table) {
+        // Tambahkan kembali kolom yang dihapus, jika belum ada
+        if (!Schema::hasColumn('spnsr_submissions', 'judul_publikasi')) {
             $table->string('judul_publikasi')->after('tanggal_prosa');
-            $table->string('tipe_arc')->after('judul_publikasi');
-            $table->foreignId('publication_id')->nullable()->constrained('publications');
+        }
 
-            // Hapus kolom baru
-            $table->dropForeign(['submission_publication_id']);
-            $table->dropColumn('submission_publication_id');
-        });
-    }
+        if (!Schema::hasColumn('spnsr_submissions', 'tipe_arc')) {
+            $table->string('tipe_arc')->after('judul_publikasi');
+        }
+
+        if (!Schema::hasColumn('spnsr_submissions', 'publication_id')) {
+            $table->foreignId('publication_id')->nullable()->constrained('publications');
+        }
+
+        // Hapus kolom baru jika ada
+        if (Schema::hasColumn('spnsr_submissions', 'submission_publication_id')) {
+            $table->dropForeign(['submission_publication_id']); // hapus foreign key dulu
+            $table->dropColumn('submission_publication_id');     // baru drop kolom
+        }
+    });
+}
+
 };

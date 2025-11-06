@@ -155,20 +155,7 @@
                                     <td>
                                         <div class="flex items-center gap-2">
                                             <span class="font-mono">{{ $sprp->nomor_publikasi_final ?? '-' }}</span>
-                                            @role('Pemeriksa')
-                                                <button type="button"
-                                                        class="btn btn-ghost btn-xs btn-circle"
-                                                        data-id="{{ $sprp->id }}"
-                                                        data-nomor="{{ $sprp->nomor_publikasi_final ?? '' }}"
-                                                        onclick="openNomorModal(this)">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-yellow-500" viewBox="0 0 20 20" fill="currentColor">
-                                                        <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
-                                                        <path fill-rule="evenodd"
-                                                              d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"
-                                                              clip-rule="evenodd" />
-                                                    </svg>
-                                                </button>
-                                            @endrole
+                                            
                                         </div>
                                     </td>
                                     <td class="text-center">
@@ -212,87 +199,9 @@
     </div>
 
     {{-- ===== Modal Nomor Publikasi ===== --}}
-   <dialog id="nomor_publikasi_modal" class="modal modal-bottom sm:modal-middle">
-    <div class="modal-box bg-base-100 shadow-2xl rounded-2xl border border-base-200 p-6 transition-all duration-300 ease-out scale-95 hover:scale-100">
-        <!-- Tombol Close -->
-        <form method="dialog">
-            <button 
-                class="btn btn-sm btn-circle btn-ghost absolute right-3 top-3 hover:bg-base-200 transition">
-                ✕
-            </button>
-        </form>
-
-        <!-- Header -->
-        <div class="text-center mb-6">
-            <h3 class="font-extrabold text-xl text-primary mb-1">
-                Tambah Nomor Publikasi
-            </h3>
-            <p class="text-sm text-base-content/70">
-                Masukkan nomor publikasi dari portal publikasi resmi.
-            </p>
-        </div>
-
-        <!-- Form -->
-        <form id="nomor_form" method="POST" action="">
-            @csrf
-            @method('PATCH')
-
-            <div class="form-control w-full">
-                <label class="label">
-                    <span class="label-text font-medium">Nomor Publikasi</span>
-                </label>
-                <input type="text"
-                       id="nomor_input"
-                       name="nomor_publikasi"
-                       class="input input-bordered w-full rounded-xl focus:ring-2 focus:ring-primary focus:outline-none transition"
-                       placeholder="Contoh: 12345/Publ/BPS/2025"
-                       required />
-                <p class="text-xs text-base-content/60 mt-1">
-                    Pastikan nomor publikasi sesuai format resmi.
-                </p>
-            </div>
-        </form>
-
-        <!-- Tombol Aksi -->
-        <div class="modal-action mt-8 flex justify-end gap-3">
-            <form method="dialog">
-                <button class="btn btn-ghost rounded-xl hover:bg-base-200">
-                    Batal
-                </button>
-            </form>
-            <button type="submit" form="nomor_form" class="btn btn-primary rounded-xl shadow-md hover:shadow-lg transition">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M5 13l4 4L19 7" />
-                </svg>
-                Simpan
-            </button>
-        </div>
-    </div>
-
-    <!-- Backdrop -->
-    <form method="dialog" class="modal-backdrop bg-black/40 backdrop-blur-sm">
-        <button>close</button>
-    </form>
-</dialog>
+   
 
 
-    {{-- ===== Script Tambahan ===== --}}
-    @push('scripts')
-        <script>
-            window.openNomorModal = function(button) {
-                const id = button.getAttribute('data-id');
-                const nomor = button.getAttribute('data-nomor');
-                const modal = document.getElementById('nomor_publikasi_modal');
-                const input = document.getElementById('nomor_input');
-                const form = document.getElementById('nomor_form');
 
-                input.value = nomor || '';
-                form.action = `/sprp/${id}/update-nomor`;
-
-                modal.showModal();
-            };
-        </script>
-    @endpush
 
 </x-app-layout>

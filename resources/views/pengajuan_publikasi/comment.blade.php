@@ -148,41 +148,39 @@
                         <div class="card-body p-6">
                             <h3 class="text-lg font-bold text-base-content/90 mb-6">Riwayat Diskusi</h3>
                             <div class="space-y-6">
-                                @forelse ($submission->comments->sortBy('created_at') as $index => $comment) {{-- Urutkan berdasarkan waktu --}}
-                                {{-- REVISI: Tambahkan class animasi --}}
-                                <div class="chat @if($comment->user_id == auth()->id()) chat-end @else chat-start @endif chat-animated"
-                                    style="--delay: {{ $index * 0.1 }}s;">
-                                    <div class="chat-image avatar">
-                                        <div class="w-10 rounded-full bg-base-300 flex items-center justify-center font-semibold text-base-content/70">
-                                            <span>{{ strtoupper(substr($comment->user->name, 0, 1)) }}</span> {{-- Uppercase agar lebih jelas --}}
-                                        </div>
-                                    </div>
-                                    <div class="chat-header text-xs text-base-content/60 mb-1">
-                                        <span class="font-medium text-base-content/80">{{ $comment->user->name }}</span>
-                                        {{-- Label Peran (Pemeriksa/Penyusun) --}}
-                                        @if ($comment->user->hasRole('Pemeriksa'))
-                                        <span class="badge badge-xs badge-info text-white ml-1 align-middle">Pemeriksa</span>
-                                        @elseif ($comment->user->hasRole('Penyusun'))
-                                        <span class="badge badge-xs badge-success text-white ml-1 align-middle">Penyusun</span>
-                                        @else
-                                        <span class="badge badge-xs badge-ghost ml-1 align-middle">{{ $comment->user->getRoleNames()->first() ?? 'User' }}</span>
-                                        @endif
-                                        <time class="ml-2">{{ $comment->created_at->diffForHumans() }}</time>
-                                    </div>
-                                    {{-- REVISI: Gunakan chat-bubble-primary untuk user saat ini, default untuk yang lain --}}
-                                    <div class="chat-bubble @if($comment->user_id == auth()->id()) chat-bubble-primary text-white @else bg-base-200 @endif prose prose-sm max-w-none">
-                                        {!! nl2br(e($comment->body)) !!}
-                                    </div>
-                                </div>
-                                @empty
-                                <div class="text-center text-base-content/50 py-10">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto mb-3 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                                    </svg>
-                                    <p>Belum ada komentar.</p>
-                                    <p class="text-sm">Jadilah yang pertama memberi masukan.</p>
-                                </div>
-                                @endforelse
+                                @forelse ($submission->comments->sortBy('created_at') as $index => $comment)
+    <div class="chat @if($comment->user_id == auth()->id()) chat-end @else chat-start @endif chat-animated"
+        style="--delay: {{ $index * 0.1 }}s;">
+        <div class="chat-image avatar">
+            <div class="w-10 rounded-full bg-base-300 flex items-center justify-center font-semibold text-base-content/70">
+                <span>{{ strtoupper(substr($comment->user->name, 0, 1)) }}</span>
+            </div>
+        </div>
+        <div class="chat-header text-xs text-base-content/60 mb-1">
+            <span class="font-medium text-base-content/80">{{ $comment->user->name }}</span>
+            {{-- Label peran --}}
+            <span class="badge badge-xs 
+                @if($comment->user->hasRole('Pemeriksa')) badge-info text-white
+                @elseif($comment->user->hasRole('Penyusun')) badge-success text-white
+                @else badge-ghost @endif ml-1 align-middle">
+                {{ $comment->user->getRoleNames()->first() ?? $comment->role }}
+            </span>
+            <time class="ml-2">{{ $comment->created_at->diffForHumans() }}</time>
+        </div>
+        <div class="chat-bubble @if($comment->user_id == auth()->id()) chat-bubble-primary text-white @else bg-base-200 @endif prose prose-sm max-w-none">
+            {!! nl2br(e($comment->body)) !!}
+        </div>
+    </div>
+@empty
+    <div class="text-center text-base-content/50 py-10">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto mb-3 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+        </svg>
+        <p>Belum ada komentar.</p>
+        <p class="text-sm">Jadilah yang pertama memberi masukan.</p>
+    </div>
+@endforelse
+
                             </div>
                         </div>
                     </div>

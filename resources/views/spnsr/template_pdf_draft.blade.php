@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html>
-
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>SPNSR - {{ $nomor }}</title>
@@ -12,163 +11,123 @@
             line-height: 1.4;
         }
 
-        /* * Wrapper utama untuk memberi margin kiri-kanan pada seluruh dokumen
-         * agar tidak ada yang terpotong.
-         */
+        /* Wrapper utama agar tidak terpotong */
         .container {
             margin-left: 1.5cm;
             margin-right: 1.5cm;
         }
 
-        /* * REVISI 1 & 3: Layout Kop Surat & Logo Sejajar
-         * Kita gunakan table untuk menyejajarkan logo dan teks.
-         */
+        /* --- KOP SURAT --- */
         .header-table {
             width: 100%;
             border-collapse: collapse;
         }
-
-        /* Kolom untuk logo */
         .header-logo {
             width: 90px;
-            /* Lebar area logo */
             vertical-align: top;
             padding-right: 10px;
         }
-
-        /* Kolom untuk teks header */
         .header-text {
             vertical-align: top;
             text-align: left;
-            /* Sesuai permintaan: rata kiri */
         }
-
-        /* REVISI 2: Font Italic */
+        /* Style Teks Kop (Ini dari template Anda, sudah bagus) */
         .header-text h1 {
             font-size: 16pt;
             font-weight: bold;
             font-style: italic;
-            /* FONT MIRING */
-            margin: 0;
-            padding: 0;
+            margin: 0; padding: 0;
             line-height: 1.2;
         }
-
         .header-text p {
             font-size: 10pt;
-            margin: 0;
-            padding: 0;
+            margin: 0; padding: 0;
         }
-
-        /* Garis pemisah tebal */
         .header-line {
             border-bottom: 3px solid black;
             width: 100%;
             margin-top: 5px;
-            /* Jarak dari teks kop surat ke garis */
-            margin-bottom: 15px;
-            /* Jarak dari garis ke nomor surat */
+            margin-bottom: 10px;
         }
-
-        /* REVISI 4: Nomor Surat di Kanan */
+        
+        /* --- JUDUL & NOMOR (Sesuai Gambar) --- */
+        .title {
+            text-align: center;
+            font-weight: bold;
+            font-size: 12pt;
+            text-decoration: underline;
+            margin-top: 20px;
+        }
         .nomor-surat {
-            text-align: right;
-            /* PINDAH KE KANAN */
-            margin-bottom: 15px;
+            text-align: center;
+            font-size: 11pt;
+            margin-bottom: 25px;
         }
 
-        .penerima {
-            margin-bottom: 15px;
-        }
-
-        .paragraf-pembuka p,
-        .paragraf-isi p,
-        .paragraf-penutup p {
+        /* --- ISI SURAT --- */
+        .paragraf {
             text-align: justify;
+            margin-bottom: 15px;
         }
-
-        .data-table {
+        
+        /* Tabel untuk biodata penanda tangan (Nama, NIP, Jabatan) */
+        .biodata-table {
             width: 100%;
-            margin-left: 20px;
+            margin-left: 20px; /* Sedikit menjorok */
             border-collapse: collapse;
+            margin-bottom: 15px;
         }
-
-        .data-table td {
+        .biodata-table td {
             vertical-align: top;
-            padding: 2px 0;
+            padding: 1px 0;
         }
-
-        .data-table td:first-child {
-            width: 20%;
-        }
-
-        .data-table td:nth-child(2) {
-            width: 2%;
-        }
-
+        .biodata-table td:first-child { width: 15%; }
+        .biodata-table td:nth-child(2) { width: 2%; }
+        
+        /* Tabel utama untuk data publikasi (Sesuai Gambar) */
         .tabel-publikasi {
             width: 100%;
             border-collapse: collapse;
             border: 1px solid black;
             margin-top: 10px;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
         }
-
         .tabel-publikasi th,
         .tabel-publikasi td {
             border: 1px solid black;
             padding: 5px;
             text-align: left;
+            vertical-align: top;
         }
-
         .tabel-publikasi th {
             background-color: #f2f2f2;
             text-align: center;
         }
 
-        /* CSS untuk gambar TTD & Stempel (DI BAWAH NAMA) */
-        .signature-image {
-            display: block;
-            /* Membuat gambar menjadi elemen blok */
-            width: 450px;
-            /* Sesuaikan lebar gambar TTD & Stempel */
-            height: auto;
-            /* Jaga rasio aspek */
-            margin-top: -65px;
-            /* REVISI: Tarik ke atas sedikit agar pas di area TTD */
-            margin-bottom: 5px;
-            /* REVISI: Jarak kecil antara gambar dan nama */
-            opacity: 0.9;
-            /* Sedikit transparan agar terlihat natural (opsional) */
-            /* position: absolute, top, left, z-index DIHAPUS */
-        }
-
-        .signature .nama-ttd {
-            margin-top: 0;
-            /* REVISI: Hapus margin atas yang besar */
-            font-weight: bold;
-            text-decoration: underline;
-            /* z-index dan position relative tidak lagi diperlukan */
-        }
-
-        /* Penyesuaian Signature Container jika perlu */
-        .signature {
+        /* --- TANDA TANGAN (Sesuai Gambar) --- */
+        .signature-table {
+            width: 100%;
             margin-top: 30px;
-            width: 45%;
-            margin-left: 40%;
+        }
+        .signature-table .left-col {
+            width: 60%;
+        }
+        .signature-table .right-col {
+            width: 40%;
             text-align: left;
-            /* position: relative; tidak lagi diperlukan untuk gambar */
+        }
+        .signature-space {
+            height: 70px; /* Ruang kosong untuk TTD */
+        }
+        
+        /* --- CATATAN KAKI (Sesuai Gambar) --- */
+        .footer-note {
+            margin-top: 50px;
+            font-size: 10pt;
         }
 
-        /* Jarak antara Jabatan dan Area TTD/Nama */
-        .signature p:nth-of-type(2) {
-            /* Target paragraf "Kepala BPS..." */
-            margin-bottom: 70px;
-            /* REVISI: Beri ruang KOSONG di sini untuk TTD */
-        }
     </style>
 </head>
-
 <body>
 
     <div class="container">
@@ -185,95 +144,88 @@
                 </td>
             </tr>
         </table>
-
         <div class="header-line"></div>
+        <p class="title">SURAT PERNYATAAN RILIS PUBLIKASI</p>
+        <p class="nomor-surat">Nomor: {{ $nomor }}</p>
 
-        <div class="nomor-surat">
-            Nomor: {{ $nomor }}
-        </div>
-
-        <div class="penerima">
-            Yth: <br>
-            Kepala Badan Pusat Statistik <br>
-            Provinsi Jawa Tengah <br>
-            di- <br>
-            Tempat
-        </div>
-
-        <div class="paragraf-pembuka">
-            <p>{{ $tanggal_prosa }}. yang bertanda tangan di bawah ini:</p>
-        </div>
-
-        <table class="data-table">
+        <p>Yang bertanda tangan di bawah ini:</p>
+        <table class="biodata-table">
             <tr>
                 <td>Nama</td>
                 <td>:</td>
                 <td>{{ $penanda_tangan['nama'] }}</td>
             </tr>
             <tr>
+                <td>NIP</td>
+                <td>:</td>
+                <td>{{ $penanda_tangan['nip'] }}</td>
+            </tr>
+            <tr>
                 <td>Jabatan</td>
                 <td>:</td>
                 <td>{{ $penanda_tangan['jabatan'] }}</td>
             </tr>
-            <tr>
-                <td>Unit Kerja</td>
-                <td>:</td>
-                <td>{{ $penanda_tangan['unit_kerja'] }}</td>
-            </tr>
         </table>
 
-        <div class="paragraf-isi">
-            <p>Menyatakan bahwa:</p>
-            <ol style="padding-left: 20px;">
-                <li>
-                    Softcopy publikasi yang tertera pada tabel di bawah ini telah diperiksa dan siap untuk dirilis pada website BPS.
-                    <table class="tabel-publikasi">
-                        <thead>
-                            <tr>
-                                <th style="width: 5%;">No</th>
-                                <th>Judul Buku</th>
-                                <th style="width: 20%;">ARC/Non ARC</th>
-                                <th style="width: 20%;">Ket</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td style="text-align: center;">1</td>
-                                <td>{{ $judul }}</td>
-                                <td style="text-align: center;">{{ $tipe_arc }}</td>
-                                <td>{{ $keterangan }}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </li>
-                <li>
-                    Kebenaran isi publikasi menjadi tanggung jawab BPS pembuat naskah publikasi.
-                </li>
-            </ol>
-        </div>
+        <p class="paragraf">
+            dengan ini menyatakan bahwa pada hari ini, {{ $tanggal_prosa }}, judul publikasi yang tertera pada tabel di bawah ini <strong>telah diperiksa</strong>, baik konten maupun standardisasi publikasi, dan <strong>siap untuk dirilis</strong> pada website BPS.
+        </p>
 
-        <div class="paragraf-penutup">
-            <p>Demikian surat persetujuan ini dibuat, untuk dipergunakan sebagaimana mestinya.</p>
-        </div>
+        <table class="tabel-publikasi">
+            <thead>
+                <tr>
+                    <th style="width: 5%;">No<br>(1)</th>
+                    <th>Judul Publikasi<br>(2)</th>
+                    <th style="width: 18%;">ARC/Non-ARC*<br>(3)</th>
+                    
+                    <th style="width: 18%;">Tanggal Rilis<br>(4)</th>
+                    
+                    <th style="width: 20%;">Keterangan<br>(5)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="text-align: center;">1</td>
+                    <td>{{ $judul }}</td>
+                    <td style="text-align: center;">{{ $tipe_arc }}</td>
+                    
+                    <td style="text-align: center;">{{ $tanggal_rilis }}</td>
+                    
+                    <td>{{ $keterangan }}</td>
+                </tr>
+                
+                {{-- Baris kosong (sesuai gambar) --}}
+                <tr>
+                    <td style="text-align: center;">2.</td> <td></td> <td></td> <td></td> <td></td>
+                </tr>
+                <tr>
+                    <td style="text-align: center;">3.</td> <td></td> <td></td> <td></td> <td></td>
+                </tr>
+            </tbody>
+        </table>
 
-        {{-- 8. TANDA TANGAN (TANPA GAMBAR TTD UNTUK DRAFT) --}}
-        <div class="signature">
-            <p style="margin-bottom: 0;">Mengetahui,</p>
-            <p style="margin-top: 0;">Kepala BPS Kabupaten Tegal</p>
-            
-            {{-- REVISI: Gambar TTD & Stempel DIHAPUS dari template DRAFT --}}
-            {{-- @if(isset($submission) && $submission->status == 'Disetujui')
-                <img src="{{ public_path('images/ttd_stempel_kepala.png') }}" class="signature-image">
-            @endif --}}
-            
-            <div class="nama-ttd">
-                <p style="margin-bottom: 0;">{{ $penanda_tangan['nama'] }}</p>
-            </div>
-             {{-- Opsional: Tampilkan NIP jika perlu --}}
-             {{-- <p style="margin-top: 2px; font-size: 10pt;">NIP. {{ $penanda_tangan['nip'] }}</p> --}}
-        </div>
+        <p class="paragraf">
+            Demikian surat pernyataan ini dibuat untuk digunakan sebagaimana mestinya.
+        </p>
+
+        <table class="signature-table">
+            <tr>
+                <td class="left-col">
+                    </td>
+                <td class="right-col">
+                    <p>Slawi, {{ $tanggal_surat_dibuat }}</p>
+                    <p>{{ $penanda_tangan['jabatan'] }} BPS Kabupaten Tegal</p>
+                    <br>
+                    <div class="signature-space">
+                        </div>
+
+                    <p style="font-weight: bold; margin: 0;">{{ $penanda_tangan['nama'] }}</p>
+                </td>
+            </tr>
+        </table>
+        
+   
 
     </div>
 </body>
-
 </html>

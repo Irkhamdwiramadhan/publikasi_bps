@@ -8,45 +8,41 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Comment;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use App\Models\SubmissionComment;
 
 class SubmissionPublicationController extends Controller
 {
-    /**
-     * Tampilkan daftar pengajuan publikasi.
-     */
-    public function index()
-    {
-        // REVISI: Tambahkan eager load 'publication.spnsrSubmission'
-        // Ini akan mengambil pengajuan, lalu master publikasinya, 
-        // lalu SPNSR yang terkait dengan master publikasi tsb.
-        $query = SubmissionPublication::with([
-            'user', 
-            'publication', 
-            'publication.spnsrSubmission'
-        ]);
+   public function index()
+{
+    $submissions = SubmissionPublication::with('user', 'publication', 'comments')
+        ->latest()
+        ->paginate(10);
 
-        // Logika "Pintar" Anda untuk memfilter data (sudah benar)
-        if (Auth::user()->hasRole('Penyusun') && !Auth::user()->hasAnyRole(['Pemeriksa', 'Admin'])) {
-            $query->where('user_id', Auth::id());
-        }
+    $user = Auth::user();
+    $userRoles = $user->getRoleNames();
+    $role = $userRoles->contains('Penyusun') ? 'Penyusun' : ($userRoles->contains('Pemeriksa') ? 'Pemeriksa' : $userRoles->first() ?? 'Penyusun');
 
-        $submissions = $query->latest()->paginate(10);
+    // Hitung jumlah komentar belum dibaca hanya dari pihak lain
+    $submissions->getCollection()->transform(function ($item) use ($role) {
+        $roleToCheck = $role === 'Penyusun' ? 'Pemeriksa' : 'Penyusun';
 
-        return view('pengajuan_publikasi.index', compact('submissions'));
-    }
+        $item->unread_count = $item->comments()
+            ->where('role', $roleToCheck)
+            ->where('is_read', false)
+            ->count();
 
-    /**
-     * Tampilkan form tambah publikasi.
-     */
+        return $item;
+    });
+
+    return view('pengajuan_publikasi.index', compact('submissions'));
+}
+
     public function create()
     {
         $publications = Publication::select('id', 'title_ind', 'publication_type')->get();
         return view('pengajuan_publikasi.create', compact('publications'));
     }
 
-    /**
-     * Simpan data publikasi baru.
-     */
     public function store(Request $request)
     {
         $request->validate([
@@ -67,8 +63,7 @@ class SubmissionPublicationController extends Controller
 
         return redirect()->route('pengajuan_publikasi.index')->with('success', 'Publikasi berhasil diajukan!');
     }
-    
-    // Method updateStatus
+
     public function updateStatus(Request $request, $id)
     {
         $submission = SubmissionPublication::findOrFail($id);
@@ -78,30 +73,70 @@ class SubmissionPublicationController extends Controller
         return response()->json(['success' => true]);
     }
 
-    // Method comment
     public function comment(SubmissionPublication $submission)
-    {
-        $submission->load('comments.user', 'publication'); // Eager load relasi
-        return view('pengajuan_publikasi.comment', ['submission' => $submission]);
-    }
+{
+    $user = auth()->user();
 
-    // Method storeComment
-    public function storeComment(Request $request, SubmissionPublication $submission)
-    {
-        $request->validate([
-            'body' => 'required|string|max:2000',
-        ]);
+    // Ambil semua role user via Spatie
+    $roles = $user->getRoleNames();
 
-        $submission->comments()->create([
-            'body' => $request->body,
-            'user_id' => Auth::id(),
-        ]);
+    // Pilih role utama untuk logika komentar (Penyusun > Pemeriksa)
+    $role = $roles->contains('Penyusun') ? 'Penyusun' : ($roles->contains('Pemeriksa') ? 'Pemeriksa' : $roles->first() ?? 'Penyusun');
 
-        return redirect()->route('pengajuan_publikasi.comment', $submission->id)
-            ->with('success', 'Komentar berhasil dikirim.');
-    }
+    // Load komentar dan publikasi
+    $submission->load(['comments.user', 'publication']);
 
-    // Method edit
+    // Tentukan role pihak lain
+    $roleToCheck = $role === 'Penyusun' ? 'Pemeriksa' : 'Penyusun';
+
+    // Tandai komentar dari pihak lain sebagai sudah dibaca
+    $submission->comments()
+        ->where('role', $roleToCheck)
+        ->where('is_read', false)
+        ->update(['is_read' => true]);
+
+    // Hitung unread count
+    $unreadCount = $submission->comments()
+        ->where('role', $roleToCheck)
+        ->where('is_read', false)
+        ->count();
+
+    return view('pengajuan_publikasi.comment', compact('submission', 'unreadCount'));
+}
+
+public function storeComment(Request $request, SubmissionPublication $submission)
+{
+    $request->validate([
+        'body' => 'required|string|max:2000',
+    ]);
+
+    $user = auth()->user();
+
+    // Ambil semua role user
+    $roles = $user->getRoleNames();
+
+    // Pilih role utama untuk komentar (Penyusun > Pemeriksa)
+    $role = $roles->contains('Penyusun') ? 'Penyusun' : ($roles->contains('Pemeriksa') ? 'Pemeriksa' : $roles->first() ?? 'Penyusun');
+
+    // Buat komentar baru tanpa mass assignment (lebih aman)
+    $comment = new \App\Models\SubmissionComment();
+    $comment->body = $request->body;
+    $comment->user_id = $user->id;
+    $comment->role = $role; // role pasti terisi
+    $comment->is_read = false;
+
+    // Simpan komentar ke submission
+    $submission->comments()->save($comment);
+
+    return redirect()->route('pengajuan_publikasi.comment', $submission->id)
+                     ->with('success', 'Komentar berhasil dikirim.');
+}
+
+
+
+
+
+
     public function edit(SubmissionPublication $submission)
     {
         $submission->load(['publication', 'user']);
@@ -120,7 +155,6 @@ class SubmissionPublicationController extends Controller
         ]);
     }
 
-    // Method update
     public function update(Request $request, SubmissionPublication $submission)
     {
         $request->validate([

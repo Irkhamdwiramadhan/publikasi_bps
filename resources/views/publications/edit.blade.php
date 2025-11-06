@@ -31,7 +31,6 @@
             </div>
         </div>
     </x-slot>
-
     {{-- Konten Utama --}}
     <div class="py-12 fade-in">
         {{-- REVISI: Menyamakan max-w-5xl seperti halaman create --}}

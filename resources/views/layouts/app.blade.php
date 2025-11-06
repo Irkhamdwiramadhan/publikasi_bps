@@ -109,7 +109,7 @@
 
             {{-- Footer ringan --}}
             <footer class="py-4 text-center text-sm text-slate-500 border-t border-slate-100">
-                © {{ date('Y') }} — <span class="text-sky-600 font-semibold">{{ config('app.name', 'BPS Kabupaten Tegal') }}</span>. All rights reserved.
+                Copyright © {{ date('Y') }} - All right reserved by BPS Kabupaten Tegal And STT Terpadu Nurul Fikri
             </footer>
         </div>
 

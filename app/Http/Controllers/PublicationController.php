@@ -78,13 +78,13 @@ class PublicationController extends Controller
     public function store(Request $request)
     {
         //
-        $validatedData = $request->validate([
+      $validatedData = $request->validate([
             'title_ind' => 'required|string|max:255',
-            'title_eng' => 'nullable|string|max:255', // Ditambahkan untuk konsistensi
             'publication_type' => 'required|string',
-            'catalog_number' => 'required|string|max:50',
-            'year' => 'required|integer|min:2000',
-            'frequency' => 'required|string|max:100',
+            'catalog_number' => 'nullable|string|max:50|unique:publications', // 👈 JADI NULLABLE
+            'year' => 'nullable|integer|min:2000',                        // 👈 JADI NULLABLE
+            'frequency' => 'nullable|string|max:100',                     // 👈 JADI NULLABLE
+            'title_eng' => 'nullable|string|max:255',
             'issn_number' => 'nullable|string|max:50',
         ]);
 
@@ -183,6 +183,40 @@ class PublicationController extends Controller
         }
         
         return redirect()->route('publications.index')->with('success', 'Data master publikasi berhasil diimpor.');
+    }
+    public function storeAjax(Request $request)
+    {
+        // Validasi data (sama seperti di 'store', tapi sesuaikan untuk modal)
+      $validatedData = $request->validate([
+            'title_ind' => 'required|string|max:255',
+            'publication_type' => 'required|string',
+            'catalog_number' => 'nullable|string|max:50|unique:publications', // <-- UBAH JADI NULLABLE
+            'year' => 'nullable|integer|min:2000',                        // <-- UBAH JADI NULLABLE
+            'frequency' => 'nullable|string|max:100',                     // <-- UBAH JADI NULLABLE
+            'title_eng' => 'nullable|string|max:255',
+            'issn_number' => 'nullable|string|max:50',
+        ]);
+
+        try {
+            $publication = Publication::create($validatedData);
+
+            // Jika berhasil, kirim data publikasi baru sebagai JSON
+            return response()->json([
+                'success' => true,
+                'publication' => [
+                    'id' => $publication->id,
+                    // Format teks ini harus SAMA seperti di dropdown Anda
+                    'text' => '[' . $publication->publication_type . '] ' . $publication->title_ind
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            // Jika gagal, kirim pesan error
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menyimpan data: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }
 
