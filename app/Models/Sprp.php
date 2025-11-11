@@ -10,28 +10,30 @@ class Sprp extends Model
     use HasFactory;
 
     /**
-     * Properti $fillable menentukan kolom mana yang boleh diisi
-     * secara massal (mass assignable).
+     * Nama tabel (karena nama model 'Sprp' tidak jamak 'Sprps')
+     */
+    protected $table = 'sprps';
+
+    /**
+     * Kolom yang boleh diisi (mass assignable).
+     * Perhatikan: 'kategori', 'issn', dan 'isbn' sudah dihapus
+     * karena sudah pindah ke tabel submission_publications.
      */
     protected $fillable = [
         'user_id',
-        'publication_id',
+        'submission_publication_id', // <-- Ini adalah link baru
         'jumlah_romawi',
         'jumlah_arab',
-        'kategori',
-        'isbn',
-        'issn',
-        'pembuat_cover', // <-- INI ADALAH PERBAIKANNYA
+        'pembuat_cover',
         'orientasi',
         'diterbitkan_untuk',
         'ukuran_kertas',
-        'status',
-        'nomor_publikasi_final',
+        'nomor_publikasi_final', // <-- Kolom penting ini tetap ada
+        'kategori',
     ];
 
     /**
-     * Relasi ke model User (Penyusun).
-     * ('user_id')
+     * Relasi ke User (Penyusun)
      */
     public function user()
     {
@@ -39,12 +41,11 @@ class Sprp extends Model
     }
 
     /**
-     * Relasi ke model Publication (Judul Master).
-     * ('publication_id')
+     * Relasi baru ke 'jantung' data (submission_publications)
      */
-    public function publication()
+    public function submissionPublication()
     {
-        return $this->belongsTo(Publication::class);
+        // Menghubungkan model ini ke model SubmissionPublication
+        return $this->belongsTo(SubmissionPublication::class, 'submission_publication_id');
     }
 }
-

@@ -66,7 +66,7 @@
                 </summary>
                 <ul class="ml-4 mt-1 space-y-1 border-l border-blue-200 pl-3">
                     <li>
-                        <a href="{{ route('publications.index') }}"
+                        <a href="{{ route('catalog.create') }}"
                             class="block rounded-lg px-3 py-1.5 transition-all duration-300 group
                                   {{ request()->routeIs('publications.*') 
                                       ? 'bg-blue-600 text-white font-medium' 
@@ -120,7 +120,7 @@
                 </summary>
                 <ul class="ml-4 mt-1 space-y-1 border-l border-blue-200 pl-3">
                     <li>
-                        <a href="{{ route('sprp.index') }}"
+                        <a href="{{ route('sprp.create') }}"
                             class="block rounded-lg px-3 py-1.5 transition-all duration-300 group
                            {{ request()->routeIs('sprp.*') 
                                ? 'bg-blue-600 text-white font-medium' 

@@ -2,24 +2,27 @@
 
 namespace App\Http\Controllers;
 
+// ▼▼▼ PASTIKAN SEMUA IMPORT INI ADA ▼▼▼
 use App\Models\Sprp;
-use App\Models\Publication;
-use App\Models\User; // Masih dibutuhkan untuk relasi 'user_id' (penyusun)
+use App\Models\Catalog;
+use App\Models\SubmissionPublication; // Ini adalah "jantung" data
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth; // Dibutuhkan untuk mengisi user_id
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB; // Wajib untuk Transaksi Database
 
 class SprpController extends Controller
 {
     /**
      * Menampilkan daftar (halaman index) dari SPRP.
-     * Ini adalah halaman alur kerja (workflow) utama.
+     * (Anda mungkin perlu merevisi eager load di sini nanti)
      */
     public function index()
     {
-        // Ambil data SPRP dengan relasi ke Publikasi
-        // Halaman index (workflow) akan membutuhkan data publikasi
-        $sprps = Sprp::with(['publication'])->latest()->paginate(10);
-        
+        // REVISI: Eager load relasi baru
+        $sprps = Sprp::with(['submissionPublication.catalog', 'user'])
+            ->latest()
+            ->paginate(10);
+
         return view('sprp.index', compact('sprps'));
     }
 
@@ -28,177 +31,98 @@ class SprpController extends Controller
      */
     public function create()
     {
-        // Ambil data untuk dropdown 'publication_id'
-        $publications = Publication::orderBy('title_ind')->get();
-        
-        // [REVISI] Data $users tidak lagi diperlukan untuk form
-        
+        // [REVISI] Ambil data katalog untuk dropdown
+        $catalogs = Catalog::orderBy('nomor_katalog')->get();
+
         return view('sprp.create', [
-            'publications' => $publications,
-            // [REVISI] 'users' => $users telah dihapus
+            'catalogs' => $catalogs,
         ]);
     }
 
     /**
      * Menyimpan data SPRP baru ke database.
+     * [REVISI TOTAL] - Logika "Satu Form, Dua Tabel"
+     */
+    /**
+     * Menyimpan data SPRP baru ke database.
+     * [REVISI KOREKSI] - Mengembalikan logika 'nomor_publikasi_final'
      */
     public function store(Request $request)
     {
-        // Validasi data form (Ini tetap sama)
+        // 1. Validasi
         $validatedData = $request->validate([
-            'publication_id' => 'required|exists:publications,id',
-            'jumlah_romawi' => 'nullable|string|max:10',
-            'jumlah_arab' => 'nullable|string|max:10',
-            'kategori' => 'required|string|max:255',
-            'isbn' => 'nullable|string|max:50',
-            'issn' => 'nullable|string|max:50',
-            'pembuat_cover' => 'required|string|max:255',
-            'orientasi' => 'required|string',
+            'type_publikasi'    => 'required|string|max:50',
+            'judul_publikasi'   => 'required|string|max:255',
+            'judul_eng'         => 'nullable|string|max:255',
+            'estimasi_rilis'    => 'required|date',
+            'bahasa'            => 'required|string|max:50',
+            'catalog_id'        => 'required|exists:catalogs,id',
+            'issn'              => 'nullable|string|max:50',
+            'isbn'              => 'nullable|string|max:50',
+            'fungsi_pengusul'   => 'required|string|max:255',
+            'link_publikasi'    => 'nullable|url|max:255',
+            'jumlah_romawi'     => 'nullable|string|max:10',
+            'jumlah_arab'       => 'nullable|string|max:10',
             'diterbitkan_untuk' => 'required|string',
-            'ukuran_kertas' => 'required|string',
+            'pembuat_cover'     => 'required|string',
+            'orientasi'         => 'required|string',
+            'ukuran_kertas'     => 'required|string',
+            'kategori'          => 'required|string', // <-- 1. TAMBAHKAN VALIDASI KATEGORI
         ]);
-
-        // =======================================================
-        // ▼▼▼ LOGIKA GENERATE NOMOR PUBLIKASI BARU ▼▼▼
-        // =======================================================
-
-        // 1. Tentukan prefix statis
-        $prefix = '33280';
-
-        // 2. Ambil 2 digit tahun ini (misal: '25' untuk 2025)
-        $tahun = date('y');
-
-        // 3. Ambil tahun penuh (misal: '2025') untuk query
-        $tahunSekarang = date('Y');
         
-        // 4. Hitung data SPRP yang sudah ada di tahun ini
-        $urutanTahunIni = Sprp::whereYear('created_at', $tahunSekarang)->count();
-        
-        // 5. Nomor urut baru adalah (jumlah sebelumnya + 1)
-        $nomorUrut = $urutanTahunIni + 1;
+        $userId = Auth::id();
 
-        // 6. Format nomor urut menjadi 3 digit (misal: 1 -> '001', 20 -> '020')
-        $nomorUrutPadded = str_pad($nomorUrut, 3, '0', STR_PAD_LEFT);
-
-        // 7. Gabungkan semua bagian menjadi format final
-        // Hasil: "33280.25020"
-        $nomorPublikasiFinal = $prefix . '.' . $tahun . $nomorUrutPadded;
-
-        // =======================================================
-        // ▲▲▲ AKHIR LOGIKA GENERATE NOMOR ▲▲▲
-        // =======================================================
-
-
-        // Tambahkan ID user yang sedang login (Penyusun)
-        $validatedData['user_id'] = Auth::id();
-        
-        // Tambahkan status default (sesuai migrasi)
-        $validatedData['status'] = 'Sedang diperiksa'; 
-
-        // [REVISI] Tambahkan nomor publikasi yang baru dibuat secara otomatis
-        $validatedData['nomor_publikasi_final'] = $nomorPublikasiFinal;
-
-        // Buat data SPRP baru
-        Sprp::create($validatedData);
-
-        return redirect()->route('sprp.index')->with('success', 'Pengajuan SPRP berhasil disimpan.');
-    }
-
-    /**
-     * Menampilkan detail dari satu SPRP (belum diimplementasikan).
-     */
-   public function show(Sprp $sprp)
-    {
-        // [INI YANG BENAR]
-        // Tampilkan view 'sprp.show' dan kirim data $sprp
-        
-        // Kita Eager Load relasi 'user' dan 'publication'
-        // agar tidak error saat dipanggil di view
-        $sprp->load(['user', 'publication']);
-
-        return view('sprp.show', compact('sprp'));
-    }
-
-    /**
-     * Menampilkan form untuk mengedit SPRP.
-     */
-    public function edit(Sprp $sprp)
-    {
-        // Ambil data untuk dropdown 'publication_id'
-        $publications = Publication::orderBy('title_ind')->get();
-
-        // [REVISI] Data $users tidak lagi diperlukan untuk form
-
-        return view('sprp.edit', [
-            'sprp' => $sprp,
-            'publications' => $publications,
-            // [REVISI] 'users' => $users telah dihapus
-        ]);
-    }
-
-    /**
-     * Memperbarui data SPRP di database.
-     */
-    public function update(Request $request, Sprp $sprp)
-    {
-        // Validasi data form
-        $validatedData = $request->validate([
-            'publication_id' => 'required|exists:publications,id',
-            'jumlah_romawi' => 'nullable|string|max:10',
-            'jumlah_arab' => 'nullable|string|max:10',
-            'kategori' => 'required|string|max:255',
-            'isbn' => 'nullable|string|max:50',
-            'issn' => 'nullable|string|max:50',
-            
-            // [REVISI] Mengubah validasi dari 'pembuat_cover_id' ke 'pembuat_cover'
-            'pembuat_cover' => 'required|string|max:255',
-            
-            'orientasi' => 'required|string',
-            'diterbitkan_untuk' => 'required|string',
-            'ukuran_kertas' => 'required|string',
-        ]);
-
-        // Update data SPRP
-        $sprp->update($validatedData);
-
-        return redirect()->route('sprp.index')->with('success', 'Data SPRP berhasil diperbarui.');
-    }
-
-    /**
-     * Menghapus data SPRP dari database.
-     */
-    public function destroy(Sprp $sprp)
-    {
         try {
-            $sprp->delete();
-            return redirect()->route('sprp.index')->with('success', 'Data SPRP berhasil dihapus.');
+            DB::beginTransaction();
+
+            // 2. Simpan ke 'submission_publications'
+            $submission = SubmissionPublication::create([
+                'user_id'           => $userId,
+                'judul_publikasi'   => $validatedData['judul_publikasi'], 
+                'type_publikasi'    => $validatedData['type_publikasi'],
+                'judul_eng'         => $validatedData['judul_eng'],
+                'estimasi_rilis'    => $validatedData['estimasi_rilis'],
+                'bahasa'            => $validatedData['bahasa'],
+                'catalog_id'        => $validatedData['catalog_id'],
+                'issn'              => $validatedData['issn'],
+                'isbn'              => $validatedData['isbn'],
+                'fungsi_pengusul'   => $validatedData['fungsi_pengusul'],
+                'tautan_publikasi'  => $validatedData['link_publikasi'], 
+            ]);
+
+            // 3. Logika nomor publikasi final (Sudah Benar)
+            $prefix = '33280';
+            $tahun = date('y');
+            $tahunSekarang = date('Y');
+            $urutanTahunIni = \App\Models\Sprp::whereYear('created_at', $tahunSekarang)->count();
+            $nomorUrut = $urutanTahunIni + 1;
+            $nomorUrutPadded = str_pad($nomorUrut, 3, '0', STR_PAD_LEFT);
+            $nomorPublikasiFinal = $prefix . '.' . $tahun . $nomorUrutPadded;
+
+            // 4. Simpan ke tabel 'sprps'
+            Sprp::create([
+                'user_id'                   => $userId,
+                'submission_publication_id' => $submission->id,
+                'kategori'                  => $validatedData['kategori'], // <-- 2. TAMBAHKAN PENYIMPANAN KATEGORI
+                'jumlah_romawi'             => $validatedData['jumlah_romawi'],
+                'jumlah_arab'               => $validatedData['jumlah_arab'],
+                'diterbitkan_untuk'         => $validatedData['diterbitkan_untuk'],
+                'pembuat_cover'             => $validatedData['pembuat_cover'],
+                'orientasi'                 => $validatedData['orientasi'],
+                'ukuran_kertas'             => $validatedData['ukuran_kertas'],
+                'status'                    => 'Sedang diperiksa',
+                'nomor_publikasi_final'     => $nomorPublikasiFinal,
+            ]);
+
+            DB::commit();
+            return redirect()->route('pengajuan_publikasi.index')->with('success', 'Pengajuan SPRP berhasil disimpan.');
         } catch (\Exception $e) {
-            return redirect()->route('sprp.index')->with('error', 'Gagal menghapus data: ' . $e->getMessage());
+            DB::rollBack();
+
+
+            return back()->with('error', 'Gagal menyimpan data: ' . $e->getMessage())->withInput();
         }
     }
 
-    /**
-     * Fungsi khusus untuk (Pemeriksa) mengupdate No. Publikasi Final.
-     * Ini dipanggil dari modal di halaman index.
-     */
-    public function updateNomor(Request $request, Sprp $sprp)
-    {
-        // Pastikan hanya role tertentu (misal: pemeriksa) yang bisa
-        // Anda bisa tambahkan Gate/Policy di sini nanti
-        // if (Auth::user()->cannot('updateNomor', $sprp)) {
-        //     abort(403);
-        // }
-
-        $request->validate(['nomor_publikasi' => 'required|string|max:50']);
-        
-        $sprp->nomor_publikasi_final = $request->nomor_publikasi;
-        
-        // Mungkin Anda juga ingin mengubah status di sini?
-        // $sprp->status = 'Disetujui'; 
-        
-        $sprp->save();
-
-        return redirect()->route('sprp.index')->with('success', 'Nomor publikasi berhasil diperbarui.');
-    }
+    // ... (Method show, edit, update, destroy perlu direvisi nanti) ...
 }
-

@@ -117,7 +117,7 @@
             text-align: left;
         }
         .signature-space {
-            height: 70px; /* Ruang kosong untuk TTD */
+            height: 100px; /* Ruang kosong untuk TTD */
         }
         
         /* --- CATATAN KAKI (Sesuai Gambar) --- */
@@ -218,6 +218,7 @@
                     <br>
                     <div class="signature-space">
                         </div>
+                        <br>
 
                     <p style="font-weight: bold; margin: 0;">{{ $penanda_tangan['nama'] }}</p>
                 </td>

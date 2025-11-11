@@ -1,0 +1,9 @@
+.fc{direction:ltr;text-align:left}
+.fc .fc-button{background:#2c3e50;border:0;color:#fff;padding:6px 12px;border-radius:4px;cursor:pointer}
+.fc .fc-button:hover{background:#1a252f}
+.fc .fc-toolbar-title{font-size:1.3em;font-weight:600}
+.fc-theme-standard td, .fc-theme-standard th{border:1px solid #ddd}
+.fc-daygrid-day{background:#fff}
+.fc-day-today{background:#fef7e0 !important}
+.fc-event{padding:2px 4px;font-size:.85rem;border-radius:4px}
+.fc-daygrid-event-dot{border-color:inherit}

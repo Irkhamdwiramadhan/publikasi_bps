@@ -1,7 +1,7 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\PublicationController;
+use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use App\Http\Controllers\SprpController;
@@ -10,6 +10,7 @@ use App\Http\Controllers\SubmissionPublicationController;
 use App\Http\Controllers\SpnsrController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\BrsController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -47,15 +48,15 @@ Route::middleware('auth')->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::middleware(['role:Admin'])->group(function () {
-        Route::resource('publications', PublicationController::class);
+        Route::resource('catalog', CatalogController::class);
         Route::resource('users', UserController::class);
         Route::patch('/users/{user}/status', [UserController::class, 'updateStatus'])->name('users.updateStatus');
-        Route::get('publications-export-template', [PublicationController::class, 'exportTemplate'])->name('publications.exportTemplate');
-        Route::post('publications-import', [PublicationController::class, 'import'])->name('publications.import');
+        Route::get('catalog-export-template', [CatalogController::class, 'exportTemplate'])->name('catalog.exportTemplate');
+        Route::post('catalog-import', [CatalogController::class, 'import'])->name('catalog.import');
     });
     // Rute untuk menyimpan publikasi baru via AJAX dari modal
-    Route::post('/publications/store-ajax', [App\Http\Controllers\PublicationController::class, 'storeAjax'])
-        ->name('publications.storeAjax')
+    Route::post('/catalog/store-ajax', [App\Http\Controllers\CatalogController::class, 'storeAjax'])
+        ->name('catalog.storeAjax')
         ->middleware('auth'); // Pastikan ini dilindungi
 
     /*
@@ -73,7 +74,7 @@ Route::middleware('auth')->group(function () {
     | PENGAJUAN PUBLIKASI (PENYUSUN & PEMERIKSA)
     |--------------------------------------------------------------------------
     */
-    Route::middleware(['role:Penyusun|Pemeriksa'])->group(function () {
+    Route::middleware(['role:Penyusun|Pemeriksa|Pimpinan'])->group(function () {
 
         // CRUD utama
         Route::resource('pengajuan_publikasi', SubmissionPublicationController::class)

@@ -134,7 +134,7 @@
                                                 Alur: $submission (SPNSR) -> submissionPublication (Pengajuan) -> publication (Master) -> title_ind (Judul)
                                                 Gunakan null-safe operator (?->) untuk mencegah error jika relasi putus
                                             --}}
-                                        {{ $submission->submissionPublication?->publication?->title_ind ?? 'N/A (Relasi Publikasi Hilang)' }}
+                                        {{ $submission->submissionPublication?->judul_publikasi ?? 'N/A (Relasi Publikasi Hilang)' }}
                                     </td>
                                     <td>{{ $submission->user?->name ?? 'N/A' }}</td> {{-- Null safe --}}
                                     <td>{{ $submission->created_at->format('d M Y') }}</td>

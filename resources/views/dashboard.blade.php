@@ -1,179 +1,335 @@
 <x-app-layout>
+
+    {{-- CSS Kustom untuk Dashboard --}}
     <style>
-        /* HAPUS efek fade awal agar tidak menghilang */
-        .stat-card {
-            transition: all 0.3s ease;
-        }
-        .stat-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+        body {
+            font-family: 'Inter', sans-serif;
         }
 
-        /* Warna dan gaya elegan */
-        .dashboard-title {
-            color: #ffffff; /* Putih */
-            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
-        /* Header Section */
-        .header-bar {
-            background: linear-gradient(90deg, #60a5fa 0%, #3b82f6 100%);
-            border-radius: 10px;
-            padding: 1rem 1.5rem;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        .fade-in {
+            animation: fadeIn 0.8s ease-out forwards;
         }
 
-        /* Tombol tahun */
-        .btn-year-active {
-            background-color: #2563eb;
-            color: white;
+        .rounded-[15px] {
+            border-radius: 15px;
         }
-        .btn-year-inactive {
-            background-color: #e2e8f0;
-            color: #1e293b;
+
+        /* Style untuk card KPI */
+        .kpi-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem;
+            background-color: hsl(var(--b1));
+            border-radius: 15px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
         }
-        .btn-year-inactive:hover {
-            background-color: #cbd5e1;
+
+        .kpi-text h3 {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: hsl(var(--bc) / 0.7);
+            text-transform: uppercase;
+        }
+
+        .kpi-text p {
+            font-size: 2.25rem;
+            font-weight: 700;
+            color: hsl(var(--bc));
+        }
+
+        .kpi-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* FullCalendar styling */
+        .fc-day-sun,
+        .fc-day-sat {
+            background-color: #fdecec !important;
+            /* Weekend pink */
+        }
+
+        .fc-day-today {
+            background-color: #f3f0ff !important;
+            /* Today soft purple */
+            border: 1px solid #c5baff !important;
+        }
+
+        .fc-event {
+            font-size: 12px;
+            padding: 4px 6px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        #calendar {
+            min-height: 650px;
+        }
+        .card-title {
+            font-weight: bold;
+            font-size: 1.0rem;
+       
+           
         }
     </style>
 
     <x-slot name="header">
-        <div class="header-bar flex flex-col md:flex-row justify-between items-center">
-            <div>
-                <h2 class="dashboard-title text-2xl font-bold leading-tight">
-                    📊 {{ __('Dasboard') }}
-                </h2>
-                <div class="text-sm breadcrumbs text-blue-100 mt-1">
-                    <ul>
-                        <li><a href="{{ route('dashboard') }}" class="hover:text-white">Beranda</a></li> 
-                        <li>Dasboard</li>
-                    </ul>
-                </div>
-            </div>
-
-            {{-- Filter Tahun --}}
-            <div class="flex items-center gap-2 mt-3 md:mt-0">
-                <span class="text-sm font-medium text-blue-100">Pilih Tahun:</span>
-                <div class="join border border-blue-300 rounded-lg overflow-hidden">
-                    @foreach($availableYears->take(3) as $yearOption)
-                        <a href="{{ route('dashboard', ['year' => $yearOption]) }}" 
-                           class="join-item btn btn-sm border-none {{ $selectedYear == $yearOption ? 'btn-year-active' : 'btn-year-inactive' }}">
-                            {{ $yearOption }}
-                        </a>
-                    @endforeach
-                    @if($availableYears->count() > 3)
-                        <select class="select select-sm join-item border-none bg-blue-50 focus:outline-none" 
-                                onchange="if (this.value) window.location.href='{{ route('dashboard') }}?year='+this.value;">
-                            <option value="" disabled {{ !in_array($selectedYear, $availableYears->take(3)->toArray()) ? 'selected' : '' }}>Lainnya</option>
-                            @foreach($availableYears->slice(3) as $yearOption)
-                                <option value="{{ $yearOption }}" {{ $selectedYear == $yearOption ? 'selected' : '' }}>{{ $yearOption }}</option>
-                            @endforeach
-                        </select>
-                    @endif
-                </div>
-            </div>
-        </div>
+        <h2 class="font-semibold text-xl text-base-content leading-tight fade-in">
+            {{ __('Dashboard') }}
+        </h2>
     </x-slot>
 
-    <div class="py-10">
-        <div class="px-4 sm:px-6 lg:px-8">
-            <h3 class="text-lg font-bold text-slate-700 mb-6">Ringkasan Publikasi Tahun {{ $selectedYear }}</h3>
+    <div class="py-12 fade-in">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
 
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {{-- Filter Tahun --}}
+            <div class="mb-6 p-4 bg-base-100 rounded-[15px] shadow">
+                <form action="{{ route('dashboard') }}" method="GET" class="flex items-center gap-3">
+                    <label for="year" class="text-base-content/70 font-semibold text-sm">Tampilkan Data Tahun:</label>
 
-                {{-- Card Publikasi ARC --}}
-                <div class="card bg-white shadow-lg hover:shadow-xl transition rounded-xl">
-                    <div class="card-body p-6">
-                        <div class="flex justify-between items-start mb-4">
-                            <div>
-                                <h2 class="card-title text-slate-600 font-semibold">Publikasi ARC</h2>
-                                <p class="text-4xl font-bold text-green-500 mt-1">{{ $arcSummary['total'] }}</p>
-                            </div>
-                            <div class="bg-green-100 p-3 rounded-xl">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" /></svg>
-                            </div>
-                        </div>
+                    <select name="year" id="year"
+                        class="select select-bordered select-medium rounded-[15px] font-sm"
+                        onchange="this.form.submit()">
 
-                        <div class="bg-blue-50 p-4 rounded-lg mb-4 flex justify-between items-center">
-                            <span class="font-medium text-slate-600">Publikasi Masuk</span>
-                            <span class="font-semibold text-lg text-slate-800">{{ $arcSummary['publikasi_masuk'] }}</span>
-                        </div>
+                        @forelse ($availableYears as $year)
+                        <option value="{{ $year }}" {{ $year == $selectedYear ? 'selected' : '' }}>{{ $year }}</option>
+                        @empty
+                        <option value="{{ $selectedYear }}">{{ $selectedYear }}</option>
+                        @endforelse
+                    </select>
+                </form>
+            </div>
 
-                        <div class="grid grid-cols-2 gap-4 text-center">
-                            <div class="stat-card bg-blue-50 p-4 rounded-lg">
-                                <div class="text-2xl font-semibold text-blue-500">{{ $arcSummary['sedang_diperiksa'] }}</div>
-                                <div class="text-xs text-slate-600 mt-1">Sedang Diperiksa</div>
-                            </div>
-                            <div class="stat-card bg-blue-50 p-4 rounded-lg">
-                                <div class="text-2xl font-semibold text-yellow-500">{{ $arcSummary['butuh_perbaikan'] }}</div>
-                                <div class="text-xs text-slate-600 mt-1">Butuh Perbaikan</div>
-                            </div>
-                            <div class="stat-card bg-blue-50 p-4 rounded-lg">
-                                <div class="text-2xl font-semibold text-green-500">{{ $arcSummary['disetujui'] }}</div>
-                                <div class="text-xs text-slate-600 mt-1">Disetujui</div>
-                            </div>
-                            <div class="stat-card bg-blue-50 p-4 rounded-lg">
-                                <div class="text-2xl font-semibold text-red-500">{{ $arcSummary['ditolak'] }}</div>
-                                <div class="text-xs text-slate-600 mt-1">Ditolak</div>
-                            </div>
-                        </div>
+            {{-- KPI Cards --}}
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
 
-                        <div class="card-actions mt-6 justify-end">
-                            <a href="#" class="btn btn-ghost btn-sm text-green-500 hover:bg-green-100"> 
-                                Lihat Detail
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-                            </a>
-                        </div>
+                <div class="kpi-card">
+                    <div class="kpi-text">
+                        <h3>Publikasi ARC ({{ $currentYear }})</h3>
+                        <p>{{ $kpi_arc }}</p>
+                    </div>
+                    <div class="kpi-icon bg-blue-100 text-blue-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
                     </div>
                 </div>
 
-                {{-- Card Publikasi Non ARC --}}
-                <div class="card bg-white shadow-lg hover:shadow-xl transition rounded-xl">
-                    <div class="card-body p-6">
-                        <div class="flex justify-between items-start mb-4">
-                            <div>
-                                <h2 class="card-title text-slate-600 font-semibold">Publikasi Non ARC</h2>
-                                <p class="text-4xl font-bold text-yellow-500 mt-1">{{ $nonArcSummary['total'] }}</p>
-                            </div>
-                            <div class="bg-yellow-100 p-3 rounded-xl">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
-                            </div>
-                        </div>
+                <div class="kpi-card">
+                    <div class="kpi-text">
+                        <h3>Publikasi Non-ARC ({{ $currentYear }})</h3>
+                        <p>{{ $kpi_non_arc }}</p>
+                    </div>
+                    <div class="kpi-icon bg-green-100 text-green-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0l2.25 1.75a3 3 0 013.5 0L17 7m-12 0" />
+                        </svg>
+                    </div>
+                </div>
 
-                        <div class="bg-blue-50 p-4 rounded-lg mb-4 flex justify-between items-center">
-                            <span class="font-medium text-slate-600">Publikasi Masuk</span>
-                            <span class="font-semibold text-lg text-slate-800">{{ $nonArcSummary['publikasi_masuk'] }}</span>
-                        </div>
+                <div class="kpi-card">
+                    <div class="kpi-text">
+                        <h3>Publikasi Rilis ({{ $currentYear }})</h3>
+                        <p>{{ $kpi_rilis }}</p>
+                    </div>
+                    <div class="kpi-icon bg-pink-100 text-pink-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                </div>
 
-                        <div class="grid grid-cols-2 gap-4 text-center">
-                            <div class="stat-card bg-blue-50 p-4 rounded-lg">
-                                <div class="text-2xl font-semibold text-blue-500">{{ $nonArcSummary['sedang_diperiksa'] }}</div>
-                                <div class="text-xs text-slate-600 mt-1">Sedang Diperiksa</div>
-                            </div>
-                            <div class="stat-card bg-blue-50 p-4 rounded-lg">
-                                <div class="text-2xl font-semibold text-yellow-500">{{ $nonArcSummary['butuh_perbaikan'] }}</div>
-                                <div class="text-xs text-slate-600 mt-1">Butuh Perbaikan</div>
-                            </div>
-                            <div class="stat-card bg-blue-50 p-4 rounded-lg">
-                                <div class="text-2xl font-semibold text-green-500">{{ $nonArcSummary['disetujui'] }}</div>
-                                <div class="text-xs text-slate-600 mt-1">Disetujui</div>
-                            </div>
-                            <div class="stat-card bg-blue-50 p-4 rounded-lg">
-                                <div class="text-2xl font-semibold text-red-500">{{ $nonArcSummary['ditolak'] }}</div>
-                                <div class="text-xs text-slate-600 mt-1">Ditolak</div>
-                            </div>
-                        </div>
+            </div>
+            <br>
+            <br>
+            {{-- Kalender --}}
+            <div class="card bg-base-100 shadow-xl rounded-[15px] mb-6">
+                <div class="card-body">
+                    <h1 class="card-title text-center"><strong>Kalender Jadwal Rilis Publikasi ({{ $currentYear }})</strong></h1>
+                    <div id="calendar"></div>
+                </div>
+            </div>
 
-                        <div class="card-actions mt-6 justify-end">
-                            <a href="#" class="btn btn-ghost btn-sm text-yellow-500 hover:bg-yellow-100">
-                                Lihat Detail
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+
+            {{-- CHARTS --}}
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+
+                <div class="card bg-base-100 shadow-xl rounded-[15px] lg:col-span-3">
+                    <div class="card-body">
+                        <h2 class="card-title">Publikasi Tahun {{ $currentYear }} (Per Bulan Rilis)</h2>
+                        <div id="bar-chart-monthly"></div>
+                    </div>
+                </div>
+
+                <div class="card bg-base-100 shadow-xl rounded-[15px]">
+                    <div class="card-body">
+                        <h2 class="card-title">Publikasi Menurut Status (SPRP)</h2>
+                        <div id="donut-chart-status"></div>
+                    </div>
+                </div>
+
+                <div class="card bg-base-100 shadow-xl rounded-[15px]">
+                    <div class="card-body">
+                        <h2 class="card-title">Publikasi Menurut Kategori (SPRP)</h2>
+                        <div id="donut-chart-kategori"></div>
+                    </div>
+                </div>
+
+                <div class="card bg-base-100 shadow-xl rounded-[15px]">
+                    <div class="card-body">
+                        <h2 class="card-title">Informasi Publication</h2>
+                        <p>Lihat Informasi terkait publikasi dengan penuh menggunakan tombol di bawah ini.</p>
+                        <div class="card-actions justify-end">
+                            <a href="{{ route('pengajuan_publikasi.index') }}" class="btn btn-primary rounded-[15px] text-white">
+                                Detail Publikasi
                             </a>
+
                         </div>
                     </div>
                 </div>
 
             </div>
+
         </div>
     </div>
+
+    {{-- Load ApexCharts --}}
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+
+    {{-- Load FullCalendar --}}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+
+    @push('scripts')
+    <script>
+        /* ------------------------------------
+           FULLCALENDAR
+        ------------------------------------ */
+        document.addEventListener('DOMContentLoaded', function() {
+
+            var calendarEl = document.getElementById('calendar');
+
+            if (calendarEl) {
+                var events = @json($calendarEvents);
+
+                // Pastikan ada event sebelum set initialDate
+                var initialDate = events.length > 0 ? events[0].start : new Date().toISOString().split('T')[0];
+
+                var calendar = new FullCalendar.Calendar(calendarEl, {
+                    // Ubah initialView menjadi listMonth atau listWeek
+                    initialView: 'listMonth', // tampilkan daftar per bulan saat pertama load
+                    initialDate: initialDate,
+
+                    headerToolbar: {
+                        left: 'prev,next today',
+                        center: 'title',
+                        right: 'dayGridMonth,listMonth' // user bisa switch ke bulan / daftar per minggu
+                    },
+
+                    events: events,
+                    eventDisplay: 'block',
+                    height: 650
+                });
+
+                calendar.render();
+            }
+
+        });
+
+
+        /* ------------------------------------
+           BAR & DONUT CHARTS
+        ------------------------------------ */
+        document.addEventListener('DOMContentLoaded', function() {
+
+            // Bar Chart
+            var barOptions = {
+                series: [{
+                    name: 'Jumlah Publikasi',
+                    data: @json($barChartSeries)
+                }],
+                chart: {
+                    type: 'bar',
+                    height: 350,
+                    toolbar: {
+                        show: true
+                    }
+                },
+                plotOptions: {
+                    bar: {
+                        horizontal: false,
+                        columnWidth: '55%',
+                        endingShape: 'rounded'
+                    }
+                },
+                dataLabels: {
+                    enabled: false
+                },
+                stroke: {
+                    show: true,
+                    width: 2,
+                    colors: ['transparent']
+                },
+                xaxis: {
+                    categories: @json($barChartMonths)
+                },
+                yaxis: {
+                    title: {
+                        text: 'Jumlah Publikasi'
+                    }
+                },
+                fill: {
+                    opacity: 1
+                },
+            };
+
+            new ApexCharts(document.querySelector("#bar-chart-monthly"), barOptions).render();
+
+            // Donut Status
+            new ApexCharts(document.querySelector("#donut-chart-status"), {
+                series: @json($donutStatusSeries),
+                labels: @json($donutStatusLabels),
+                chart: {
+                    type: 'donut',
+                    height: 350
+                },
+                legend: {
+                    position: 'bottom'
+                }
+            }).render();
+
+            // Donut Kategori
+            new ApexCharts(document.querySelector("#donut-chart-kategori"), {
+                series: @json($donutKategoriSeries),
+                labels: @json($donutKategoriLabels),
+                chart: {
+                    type: 'donut',
+                    height: 350
+                },
+                legend: {
+                    position: 'bottom'
+                }
+            }).render();
+
+        });
+    </script>
+    @endpush
+
 </x-app-layout>

@@ -39,7 +39,7 @@ class AuthenticatedSessionController extends Controller
          * - Penyusun → Pengajuan Publikasi
          */
         if ($user->hasRole('Penyusun')) {
-            return redirect()->route('sprp.index');
+            return redirect()->route('pengajuan_publikasi.index');
         }
 
         if ($user->hasAnyRole(['Admin', 'Pemeriksa', 'Pimpinan'])) {
