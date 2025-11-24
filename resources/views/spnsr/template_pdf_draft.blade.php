@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>SPNSR - {{ $nomor }}</title>
@@ -22,34 +23,41 @@
             width: 100%;
             border-collapse: collapse;
         }
+
         .header-logo {
             width: 90px;
             vertical-align: top;
             padding-right: 10px;
         }
+
         .header-text {
             vertical-align: top;
             text-align: left;
         }
+
         /* Style Teks Kop (Ini dari template Anda, sudah bagus) */
         .header-text h1 {
             font-size: 16pt;
             font-weight: bold;
             font-style: italic;
-            margin: 0; padding: 0;
+            margin: 0;
+            padding: 0;
             line-height: 1.2;
         }
+
         .header-text p {
             font-size: 10pt;
-            margin: 0; padding: 0;
+            margin: 0;
+            padding: 0;
         }
+
         .header-line {
             border-bottom: 3px solid black;
             width: 100%;
             margin-top: 5px;
             margin-bottom: 10px;
         }
-        
+
         /* --- JUDUL & NOMOR (Sesuai Gambar) --- */
         .title {
             text-align: center;
@@ -58,6 +66,7 @@
             text-decoration: underline;
             margin-top: 20px;
         }
+
         .nomor-surat {
             text-align: center;
             font-size: 11pt;
@@ -69,21 +78,29 @@
             text-align: justify;
             margin-bottom: 15px;
         }
-        
+
         /* Tabel untuk biodata penanda tangan (Nama, NIP, Jabatan) */
         .biodata-table {
             width: 100%;
-            margin-left: 20px; /* Sedikit menjorok */
+            margin-left: 20px;
+            /* Sedikit menjorok */
             border-collapse: collapse;
             margin-bottom: 15px;
         }
+
         .biodata-table td {
             vertical-align: top;
             padding: 1px 0;
         }
-        .biodata-table td:first-child { width: 15%; }
-        .biodata-table td:nth-child(2) { width: 2%; }
-        
+
+        .biodata-table td:first-child {
+            width: 15%;
+        }
+
+        .biodata-table td:nth-child(2) {
+            width: 2%;
+        }
+
         /* Tabel utama untuk data publikasi (Sesuai Gambar) */
         .tabel-publikasi {
             width: 100%;
@@ -92,6 +109,7 @@
             margin-top: 10px;
             margin-bottom: 15px;
         }
+
         .tabel-publikasi th,
         .tabel-publikasi td {
             border: 1px solid black;
@@ -99,6 +117,7 @@
             text-align: left;
             vertical-align: top;
         }
+
         .tabel-publikasi th {
             background-color: #f2f2f2;
             text-align: center;
@@ -109,25 +128,29 @@
             width: 100%;
             margin-top: 30px;
         }
+
         .signature-table .left-col {
             width: 60%;
         }
+
         .signature-table .right-col {
-            width: 40%;
+            width: 50%;
             text-align: left;
         }
+
         .signature-space {
-            height: 100px; /* Ruang kosong untuk TTD */
+            height: 100px;
+            /* Ruang kosong untuk TTD */
         }
-        
+
         /* --- CATATAN KAKI (Sesuai Gambar) --- */
         .footer-note {
             margin-top: 50px;
             font-size: 10pt;
         }
-
     </style>
 </head>
+
 <body>
 
     <div class="container">
@@ -177,9 +200,9 @@
                     <th style="width: 5%;">No<br>(1)</th>
                     <th>Judul Publikasi<br>(2)</th>
                     <th style="width: 18%;">ARC/Non-ARC*<br>(3)</th>
-                    
+
                     <th style="width: 18%;">Tanggal Rilis<br>(4)</th>
-                    
+
                     <th style="width: 20%;">Keterangan<br>(5)</th>
                 </tr>
             </thead>
@@ -188,18 +211,26 @@
                     <td style="text-align: center;">1</td>
                     <td>{{ $judul }}</td>
                     <td style="text-align: center;">{{ $tipe_arc }}</td>
-                    
+
                     <td style="text-align: center;">{{ $tanggal_rilis }}</td>
-                    
+
                     <td>{{ $keterangan }}</td>
                 </tr>
-                
+
                 {{-- Baris kosong (sesuai gambar) --}}
                 <tr>
-                    <td style="text-align: center;">2.</td> <td></td> <td></td> <td></td> <td></td>
+                    <td style="text-align: center;">2.</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
                 </tr>
                 <tr>
-                    <td style="text-align: center;">3.</td> <td></td> <td></td> <td></td> <td></td>
+                    <td style="text-align: center;">3.</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
                 </tr>
             </tbody>
         </table>
@@ -211,22 +242,24 @@
         <table class="signature-table">
             <tr>
                 <td class="left-col">
-                    </td>
+                </td>
                 <td class="right-col">
                     <p>Slawi, {{ $tanggal_surat_dibuat }}</p>
                     <p>{{ $penanda_tangan['jabatan'] }} BPS Kabupaten Tegal</p>
-                    <br>
+                 
                     <div class="signature-space">
-                        </div>
-                        <br>
+                    </div>
+                
 
                     <p style="font-weight: bold; margin: 0;">{{ $penanda_tangan['nama'] }}</p>
+                    <p style="font-weight: bold; margin: 0;">NIP : {{ $penanda_tangan['nip'] }}</p>
                 </td>
             </tr>
         </table>
-        
-   
+
+
 
     </div>
 </body>
+
 </html>

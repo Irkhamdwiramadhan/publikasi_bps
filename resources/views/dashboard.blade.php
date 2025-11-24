@@ -82,11 +82,12 @@
         #calendar {
             min-height: 650px;
         }
+
         .card-title {
             font-weight: bold;
             font-size: 1.0rem;
-       
-           
+
+
         }
     </style>
 
@@ -187,7 +188,7 @@
 
                 <div class="card bg-base-100 shadow-xl rounded-[15px]">
                     <div class="card-body">
-                        <h2 class="card-title">Publikasi Menurut Kategori (SPRP)</h2>
+                        <h2 class="card-title">Publikasi Menurut Type (SPRP)</h2>
                         <div id="donut-chart-kategori"></div>
                     </div>
                 </div>
@@ -222,36 +223,49 @@
         /* ------------------------------------
            FULLCALENDAR
         ------------------------------------ */
-        document.addEventListener('DOMContentLoaded', function() {
 
-            var calendarEl = document.getElementById('calendar');
+        document.addEventListener('DOMContentLoaded', function () {
+    var calendarEl = document.getElementById('calendar');
 
-            if (calendarEl) {
-                var events = @json($calendarEvents);
+    if (calendarEl) {
+        var events = @json($calendarEvents);
 
-                // Pastikan ada event sebelum set initialDate
-                var initialDate = events.length > 0 ? events[0].start : new Date().toISOString().split('T')[0];
+        var initialDate = events.length > 0 ? events[0].start : new Date().toISOString().split('T')[0];
 
-                var calendar = new FullCalendar.Calendar(calendarEl, {
-                    // Ubah initialView menjadi listMonth atau listWeek
-                    initialView: 'listMonth', // tampilkan daftar per bulan saat pertama load
-                    initialDate: initialDate,
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'listMonth',
+            initialDate: initialDate,
 
-                    headerToolbar: {
-                        left: 'prev,next today',
-                        center: 'title',
-                        right: 'dayGridMonth,listMonth' // user bisa switch ke bulan / daftar per minggu
-                    },
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,listMonth'
+            },
 
-                    events: events,
-                    eventDisplay: 'block',
-                    height: 650
-                });
+            events: events,
+            eventDisplay: 'block',
+            height: 650,
 
-                calendar.render();
+            eventClick: function(info) {
+                info.jsEvent.preventDefault(); // mencegah default behavior
+
+                // Ambil judul publikasi dari event
+                let title = info.event.title.replace(/\[.*?\]/g, "").trim(); // buang [Status]
+
+                // Redirect ke daftar pengajuan publikasi
+                let url = `/pengajuan_publikasi?search=${encodeURIComponent(title)}`;
+
+                console.log("Redirecting to:", url);
+                window.location.href = url;
             }
-
         });
+
+        calendar.render();
+    }
+});
+
+
+
 
 
         /* ------------------------------------

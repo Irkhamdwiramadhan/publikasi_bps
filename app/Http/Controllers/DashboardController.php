@@ -98,63 +98,43 @@ class DashboardController extends Controller
         // --- Calendar events untuk FullCalendar ---
         // Format event FullCalendar minimal: [ 'title' => '...', 'start' => 'YYYY-MM-DD', ... ]
         $calendarEvents = $submissions->map(function ($s) {
-            // pastikan estimasi_rilis adalah Carbon / string yang parseable
-            $dt = $s->estimasi_rilis instanceof Carbon ? $s->estimasi_rilis : Carbon::parse($s->estimasi_rilis);
 
-            // Judul event: bisa disesuaikan (misal nama publikasi / type / status)
-            // Anda mungkin punya kolom 'judul' atau 'nama' di SubmissionPublication -> sesuaikan di sini.
-            $titleParts = [];
+    // Pastikan estimasi_rilis valid
+    $dt = $s->estimasi_rilis instanceof Carbon ? $s->estimasi_rilis : Carbon::parse($s->estimasi_rilis);
 
-            // contoh: gunakan kode / title jika ada
-            if (!empty($s->judul ?? null)) {
-                $titleParts[] = substr($s->judul, 0, 40); // potong panjang judul
-            } else {
-                // fallback: type + id
-                $titleParts[] = ($s->judul_publikasi ?? 'Publikasi') . " (#" . ($s->id ?? '') . ")";
-            }
+    // Buat title yang informatif
+   // contoh: gunakan kode / title jika ada
+if (!empty($s->judul ?? null)) {
+    $titleParts[] = substr($s->judul, 0, 40);
+} else {
+    // tanpa menampilkan ID
+    $titleParts[] = ($s->judul_publikasi ?? 'Publikasi');
+}
 
-            // tambahkan status singkat
-            if (!empty($s->status)) {
-                $titleParts[] = "[" . ucfirst($s->status) . "]";
-            }
 
-            $title = implode(' ', $titleParts);
+    if (!empty($s->status)) $titleParts[] = "[" . ucfirst($s->status) . "]";
+    $title = implode(' ', $titleParts);
 
-            // Tentukan warna event berdasarkan status atau type
-            $color = '#3b82f6'; // default biru
-            $status = strtolower($s->status ?? '');
-            $type = strtolower($s->judul_publikasi ?? '');
+    // Warna sesuai status
+    $color = '#3b82f6';
+    $status = strtolower($s->status ?? '');
+    if (str_contains($status, 'disetujui')) $color = '#10b981';
+    elseif (str_contains($status, 'proses')) $color = '#f59e0b';
+    elseif (str_contains($status, 'tolak')) $color = '#ef4444';
 
-            if (strpos($status, 'disetujui') !== false || $status === 'disetujui') {
-                $color = '#10b981'; // hijau
-            } elseif (strpos($status, 'sedang') !== false || strpos($status, 'proses') !== false) {
-                $color = '#f59e0b'; // kuning/oranye
-            } elseif ($status === 'ditolak' || strpos($status, 'tolak') !== false) {
-                $color = '#ef4444'; // merah
-            } else {
-                // berdasarkan type
-                if (strpos($type, 'arc') !== false) $color = '#6366f1';
-                if (strpos($type, 'non') !== false) $color = '#06b6d4';
-            }
+    // URL ke halaman pengajuan publikasi (bisa langsung filtered atau ke index)
+    $url = route('pengajuan_publikasi.index', ['search' => $s->judul_publikasi]);
 
-            // optional: url ke halaman detail publikasi (sesuaikan route di aplikasi Anda)
-            // Jika Anda punya route named e.g. 'submissions.show', ganti url() berikut dengan route('submissions.show', $s->id)
-            $url = url("/submissions/{$s->id}");
+    return [
+        'id' => $s->id,
+        'title' => $title,
+        'start' => $dt->toDateString(),
+        'allDay' => true,
+        'color' => $color,
+        'url' => $url, // digunakan untuk redirect
+    ];
+})->values()->all();
 
-            return [
-                'id' => $s->id,
-                'title' => $title,
-                'start' => $dt->toDateString(),
-                'allDay' => true,
-                'color' => $color,
-                'extendedProps' => [
-                    'type_publikasi' => $s->type_publikasi,
-                    'status' => $s->status,
-                    // tambahkan field lain yang berguna
-                ],
-                // 'url' => $url, // aktifkan kalau mau klik event buka detail
-            ];
-        })->values()->all();
 
         // Jika ingin juga menampilkan submissions tanpa estimasi_rilis di timeline mingguan, bisa ditambahkan
         // tetapi saat ini kita hanya menampilkan yang punya estimasi_rilis di tahun terpilih.

@@ -193,7 +193,7 @@
                                             <option value="{{ $submission->id }}"
                                                 @selected(old('submission_publication_id')==$submission->id)>
                                                 {{-- Tampilkan judul dari relasi master publication --}}
-                                                [{{ $submission->publication?->publication_type ?? 'N/A' }}] {{ $submission->publication?->title_ind ?? 'Judul Tidak Ditemukan' }} (Diajukan: {{ $submission->created_at->format('d M Y') }})
+                                                [{{ $submission->type_publikasi ?? 'N/A' }}] {{ $submission->judul_publikasi ?? 'Judul Tidak Ditemukan' }} (Diajukan: {{ $submission->created_at->format('d M Y') }})
                                             </option>
                                             @empty
                                             <option value="" disabled>Anda tidak memiliki pengajuan publikasi yang menunggu SPNSR.</option>
