@@ -38,5 +38,15 @@ class UserRoleSeeder extends Seeder
             'password' => Hash::make('password'),
             'status' => true, // <-- Pastikan ini ada juga
         ])->assignRole($pegawaiRole, 'Penyusun');
+          $tamu = User::firstOrCreate(
+            ['email' => 'tamu@bps.go.id'],
+            [
+                'name' => 'Tamu Eksternal',
+                'nip_bps' => null, // Tamu biasanya tidak punya NIP BPS
+                'password' => Hash::make('password'),
+                'status' => 'aktif',
+            ]
+        );
+        $tamu->assignRole('Tamu');
     }
 }

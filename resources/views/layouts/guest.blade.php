@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -15,13 +16,27 @@
     <style>
         /* ========== ANIMASI DAN EFEK HALUS ========== */
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         @keyframes glowPulse {
-            0%, 100% { box-shadow: 0 0 15px rgba(59, 130, 246, 0.2); }
-            50% { box-shadow: 0 0 25px rgba(59, 130, 246, 0.5); }
+
+            0%,
+            100% {
+                box-shadow: 0 0 15px rgba(59, 130, 246, 0.2);
+            }
+
+            50% {
+                box-shadow: 0 0 25px rgba(59, 130, 246, 0.5);
+            }
         }
 
         /* Background gradien lembut biru muda */
@@ -34,18 +49,20 @@
             font-family: 'Inter', sans-serif;
         }
 
-        /* Kartu login */
         .login-card {
             animation: fadeIn 0.8s ease-out;
             background: white;
             border-radius: 1.2rem;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
             overflow: hidden;
             width: 100%;
-            max-width: 420px;
-            padding: 2rem 2.5rem;
+            max-width: 1200px;
+            /* ➜ Diperbesar */
+            padding: 3rem 3.2rem;
+            /* ➜ Diperbesar */
             position: relative;
         }
+
 
         /* Logo */
         .login-logo {
@@ -121,14 +138,12 @@
 
 <body>
     <div class="login-card">
-        <div class="login-logo">
-            <img src="{{ asset('images/4.png') }}" alt="Logo BPS">
-           
-        </div>
+
 
         <div class="form-wrapper">
             {{ $slot }}
         </div>
     </div>
 </body>
+
 </html>

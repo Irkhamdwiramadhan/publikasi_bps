@@ -31,7 +31,7 @@
     <ul class="menu flex-1 px-4 py-4 text-sm space-y-1">
 
         {{-- Dashboard --}}
-        @hasanyrole('Admin|Pemeriksa|Pimpinan')
+        @hasanyrole('Admin|Pemeriksa|Pimpinan|Tamu|Penyusun')
         <li>
             <a href="{{ route('dashboard') }}"
                 class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium transition-all duration-300 group
@@ -105,7 +105,7 @@
         @endhasrole
 
         {{-- Pengajuan (bisa diakses oleh Penyusun, Pemeriksa, dan Pimpinan) --}}
-        @hasanyrole('Penyusun|Pemeriksa|Pimpinan')
+        @hasanyrole('Penyusun|Pemeriksa|Pimpinan|Tamu')
         <li class="mt-3">
             <details open class="group">
                 <summary

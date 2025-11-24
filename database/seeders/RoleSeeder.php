@@ -1,6 +1,6 @@
 <?php
 
-namespace Database\Seeders;
+namespace Database\seeders;
 
 use Illuminate\Database\Seeder;
 // Gunakan Model Role dari Spatie, BUKAN App\Models\Role kustom
@@ -29,6 +29,7 @@ class RoleSeeder extends Seeder
         Role::create(['name' => 'Penyusun', 'guard_name' => 'web']);
         Role::create(['name' => 'Pemeriksa', 'guard_name' => 'web']); // <-- Ini yang dicari oleh Gate
         Role::create(['name' => 'Pimpinan', 'guard_name' => 'web']);
+        Role::create(['name' => 'Tamu', 'guard_name' => 'web']);
     }
 }
 

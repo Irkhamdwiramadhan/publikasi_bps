@@ -26,7 +26,7 @@ Route::get('/', function () {
 // --- DASHBOARD ---
 // Admin, Pimpinan, Pemeriksa diarahkan ke sini setelah login
 Route::get('/dashboard', [DashboardController::class, 'index'])
-    ->middleware(['auth', 'verified', 'role:Admin|Pimpinan|Pemeriksa'])
+    ->middleware(['auth', 'verified', 'role:Admin|Pimpinan|Pemeriksa|Tamu|Penyusun'])
     ->name('dashboard');
 
 // --- PENYUSUN DIARAHKAN KE HALAMAN PENGAJUAN PUBLIKASI ---
@@ -64,7 +64,7 @@ Route::middleware('auth')->group(function () {
     | PENYUSUN, PEMERIKSA, PIMPINAN - SPRP
     |--------------------------------------------------------------------------
     */
-    Route::middleware(['role:Penyusun|Pemeriksa|Pimpinan'])->group(function () {
+    Route::middleware(['role:Penyusun|Pemeriksa|Pimpinan|Tamu'])->group(function () {
         Route::resource('sprp', SprpController::class)->only(['index', 'create', 'store', 'show']);
         Route::patch('/sprp/{sprp}/update-nomor', [SprpController::class, 'updateNomor'])->name('sprp.updateNomor');
     });
@@ -74,7 +74,7 @@ Route::middleware('auth')->group(function () {
     | PENGAJUAN PUBLIKASI (PENYUSUN & PEMERIKSA)
     |--------------------------------------------------------------------------
     */
-    Route::middleware(['role:Penyusun|Pemeriksa|Pimpinan'])->group(function () {
+    Route::middleware(['role:Penyusun|Pemeriksa|Pimpinan|Tamu'])->group(function () {
 
         // CRUD utama
         Route::resource('pengajuan_publikasi', SubmissionPublicationController::class)

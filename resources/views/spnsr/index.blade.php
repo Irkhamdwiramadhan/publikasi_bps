@@ -172,7 +172,7 @@
                                         <div class="flex justify-center gap-1">
                                             {{-- Tombol Detail/Cetak PDF DRAFT --}}
                                             {{-- Tombol Aksi Khusus Role Pemimpin --}}
-                                            @role('Pimpinan')
+                                            @role('Pimpinan|Tamu')
                                             {{-- Tombol Unduh Draft PDF --}}
                                             <div class="tooltip tooltip-left" data-tip="Unduh Draft SPNSR">
                                                 <a href="{{ route('spnsr.pdf.draft', $submission->id) }}"

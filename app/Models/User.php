@@ -35,8 +35,8 @@ class User extends Authenticatable // implements MustVerifyEmail
      */
     protected $fillable = [
         'name',
-        'email', // Kita tetap pakai email untuk login Admin
-        'nip_bps', // NIP untuk login Pegawai
+        'email', 
+        'nip_bps', 
         'password',
         'status', // Pastikan 'status' ada di sini
     ];
