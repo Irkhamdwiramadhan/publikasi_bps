@@ -1,0 +1,41 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use Google\Client as GoogleClient;
+use Illuminate\Support\Facades\Auth;
+
+class GoogleController extends Controller
+{
+    public function redirectToGoogle()
+    {
+        $client = new GoogleClient();
+        $client->setClientId(config('services.google.client_id'));
+        $client->setClientSecret(config('services.google.client_secret'));
+        $client->setRedirectUri(config('services.google.redirect'));
+        $client->addScope("https://www.googleapis.com/auth/drive.file");
+        $client->setAccessType('offline'); // Supaya dapat refresh token
+        $client->setPrompt('consent'); // Memastikan selalu muncul refresh token
+
+        return redirect()->away($client->createAuthUrl());
+    }
+
+    public function handleGoogleCallback(Request $request)
+    {
+        $client = new GoogleClient();
+        $client->setClientId(config('services.google.client_id'));
+        $client->setClientSecret(config('services.google.client_secret'));
+        $client->setRedirectUri(config('services.google.redirect'));
+
+        $code = $request->get('code');
+        $accessToken = $client->fetchAccessTokenWithAuthCode($code);
+
+        // Simpan access token dan refresh token di database
+        $user = Auth::user();
+        $user->google_access_token = json_encode($accessToken);
+        $user->save();
+
+        return redirect()->route('dashboard')->with('success', 'Google Drive terhubung!');
+    }
+}

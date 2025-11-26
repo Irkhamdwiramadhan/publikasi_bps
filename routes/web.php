@@ -10,6 +10,7 @@ use App\Http\Controllers\SubmissionPublicationController;
 use App\Http\Controllers\SpnsrController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\BrsController;
+use Google\Client;
 
 
 /*
@@ -92,6 +93,8 @@ Route::middleware('auth')->group(function () {
     Route::patch('/pengajuan_publikasi/{submission}/update-status', [SubmissionPublicationController::class, 'updateStatus'])
         ->middleware(['role:Pemeriksa|Admin'])
         ->name('pengajuan_publikasi.updateStatus');
+    Route::post('/pengajuan-publikasi/update-status/{id}', [SubmissionPublicationController::class, 'updateStatus'])
+        ->name('pengajuan_publikasi.updateStatus');
 
     /*
     |--------------------------------------------------------------------------
@@ -136,6 +139,52 @@ Route::middleware('auth')->group(function () {
     Route::resource('brs', BrsController::class)->middleware('auth');
     // HARUS SEPERTI INI:
     Route::get('/brs/{brs}', [BrsController::class, 'show'])->name('brs.show');
+
+
+
+});
+Route::get('/connect-google', function () {
+    $client = new Client();
+    $client->setClientId(env('GOOGLE_CLIENT_ID'));
+    $client->setClientSecret(env('GOOGLE_CLIENT_SECRET'));
+    $client->setRedirectUri(env('GOOGLE_REDIRECT_URI'));
+
+    // PENTING: Meminta akses "offline" agar dapat Refresh Token
+    $client->setAccessType('offline');
+    // PENTING: Memaksa persetujuan agar Google memberi refresh token baru
+    $client->setPrompt('select_account consent');
+
+    // Izin yang diminta (Upload & Manage file)
+    $client->addScope("https://www.googleapis.com/auth/drive");
+
+    return redirect($client->createAuthUrl());
+});
+
+// 2. Rute Callback (Tempat kita terima Token)
+Route::get('/google/callback', function (Request $request) {
+    $client = new Client();
+    $client->setClientId(env('GOOGLE_CLIENT_ID'));
+    $client->setClientSecret(env('GOOGLE_CLIENT_SECRET'));
+    $client->setRedirectUri(env('GOOGLE_REDIRECT_URI'));
+
+    if (!$request->has('code')) {
+        return 'Gagal: Tidak ada kode otorisasi.';
+    }
+
+    try {
+        // Tukar kode otorisasi dengan Token Asli
+        $token = $client->fetchAccessTokenWithAuthCode($request->code);
+
+        // Tampilkan hasilnya biar bisa dicopy
+        return response()->json([
+            'PESAN' => 'Sukses! Copy refresh_token di bawah ini ke file .env kamu.',
+            'refresh_token' => $token['refresh_token'] ?? 'ERROR: Refresh token tidak muncul. Coba revoke akses di akun Google dulu.',
+            'access_token' => $token['access_token'], // Ini cuma tahan 1 jam
+            'expires_in' => $token['expires_in']
+        ]);
+    } catch (\Exception $e) {
+        return 'Error: ' . $e->getMessage();
+    }
 });
 
 // --- ROUTE AUTH DEFAULT (LOGIN, RESET PASSWORD DLL) ---

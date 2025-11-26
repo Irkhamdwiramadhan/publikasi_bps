@@ -3,133 +3,96 @@
 namespace App\Http\Controllers;
 
 use App\Models\SubmissionPublication;
-use App\Models\Catalog; // [REVISI] Import Catalog
-use App\Models\User;
+use App\Models\Catalog;
 use App\Models\SubmissionComment;
-// use App\Models\Publication; // [REVISI] Sudah tidak dipakai
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Sprp; // [REVISI] Import model Sprp
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
+use Google\Client;
+use Google\Service\Drive;
+use Google\Service\Drive\DriveFile;
 
 class SubmissionPublicationController extends Controller
 {
-    /**
-     * [REVISI TOTAL]
-     * Menampilkan halaman index (monitoring) dengan data gabungan.
-     */
+    // =========================
+    // INDEX
+    // =========================
+// =========================
+    // INDEX (DENGAN FILTER TAHUN)
+    // =========================
     public function index(Request $request)
-{
-    // 1. Validasi input
-    $request->validate([
-        'per_page' => 'nullable|integer|in:10,25,50',
-        'search'   => 'nullable|string|max:100',
-        'tahun'    => 'nullable|integer|min:1900|max:' . now()->year,
-    ]);
+    {
+        $request->validate([
+            'per_page' => 'nullable|integer|in:10,25,50',
+            'search'   => 'nullable|string|max:100',
+            'year'     => 'nullable|integer', // Validasi input tahun
+        ]);
 
-    $perPage = $request->input('per_page', 10);
-    $search = $request->input('search');
-    $tahun = $request->input('tahun');
+        $perPage = $request->input('per_page', 10);
+        $search  = $request->input('search');
+        $year    = $request->input('year');
 
-    $user = Auth::user();
-    $userRoles = $user->getRoleNames();
-    $role = $userRoles->contains('Penyusun') ? 'Penyusun' : ($userRoles->contains('Pemeriksa') ? 'Pemeriksa' : $userRoles->first() ?? 'Penyusun');
+        $query = SubmissionPublication::with(['user', 'catalog', 'sprp', 'comments']);
 
-    // 2. Query utama dengan relasi
-    $query = SubmissionPublication::with([
-        'user',
-        'catalog',
-        'sprp',
-        'comments'
-    ]);
+        // 1. Filter Pencarian
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('judul_publikasi', 'like', "%$search%")
+                  ->orWhere('judul_eng', 'like', "%$search%");
+            });
+        }
 
-    // 3. Jika role Penyusun, tampilkan hanya publikasi miliknya
-    if ($role === 'Penyusun') {
-        $query->where('user_id', $user->id);
-    }
+        // 2. Filter Tahun (BARU)
+        if ($year) {
+            $query->whereYear('created_at', $year);
+        }
 
-    // 4. Filter pencarian
-    if ($search) {
-        $query->where(function ($q) use ($search) {
-            $q->where('judul_publikasi', 'like', '%' . $search . '%')
-              ->orWhere('judul_eng', 'like', '%' . $search . '%');
+        $submissions = $query->latest('created_at')->paginate($perPage)->withQueryString();
+
+        $user = Auth::user();
+        $roles = $user->getRoleNames();
+        $role = $roles->contains('Penyusun') ? 'Penyusun' : ($roles->contains('Pemeriksa') ? 'Pemeriksa' : $roles->first() ?? 'Penyusun');
+
+        $submissions->getCollection()->transform(function($item) use ($role) {
+            $roleToCheck = $role === 'Penyusun' ? 'Pemeriksa' : 'Penyusun';
+            $item->unread_count = $item->comments()->where('role', $roleToCheck)->where('is_read', false)->count();
+            return $item;
         });
-    }
 
-    // 5. Filter tahun (hanya jika ada)
-    if ($request->filled('tahun')) {
-        $query->whereRaw('YEAR(COALESCE(estimasi_rilis, created_at)) = ?', [$tahun]);
-    }
+        // 3. Ambil Daftar Tahun yang Tersedia (Untuk Dropdown)
+        // Mengambil tahun unik dari kolom created_at
+        $availableYears = SubmissionPublication::selectRaw('YEAR(created_at) as year')
+            ->distinct()
+            ->orderBy('year', 'desc')
+            ->pluck('year');
 
-    // 6. Urutkan dan paginasi
-    $submissions = $query->latest('created_at')
-        ->paginate($perPage)
-        ->withQueryString();
-
-    // 7. Hitung komentar belum dibaca
-    $submissions->getCollection()->transform(function ($item) use ($role) {
-        $roleToCheck = $role === 'Penyusun' ? 'Pemeriksa' : 'Penyusun';
-        $item->unread_count = $item->comments()
-            ->where('role', $roleToCheck)
-            ->where('is_read', false)
-            ->count();
-        return $item;
-    });
-
-    // 8. Kirim ke view
-    return view('pengajuan_publikasi.index', [
-        'submissions' => $submissions,
-        'filters' => $request->only(['search', 'per_page', 'tahun']),
-    ]);
-}
-
-
-
-    /**
-     * [REVISI] Method ini tidak dipakai lagi.
-     * Pengajuan baru dibuat melalui SprpController@store
-     */
-    public function create()
-    {
-        return redirect()->route('pengajuan_publikasi.index')
-            ->with('info', 'Untuk membuat pengajuan baru, silakan isi dari menu "Tambah SPRP".');
-    }
-
-    /**
-     * [REVISI] Method ini tidak dipakai lagi.
-     * Pengajuan baru disimpan melalui SprpController@store
-     */
-    public function store(Request $request)
-    {
-        // Dibiarkan kosong atau di-redirect
-        return redirect()->route('pengajuan_publikasi.index');
-    }
-
-    /**
-     * [REVISI TOTAL]
-     * Menampilkan form untuk mengedit data inti publikasi.
-     * Ini akan dipakai oleh Pemeriksa/Admin.
-     */
-    public function edit(SubmissionPublication $submission)
-    {
-        // Load relasi yang ada
-        $submission->load(['user', 'catalog']);
-
-        // Ambil data katalog untuk dropdown
-        $catalogs = Catalog::orderBy('nomor_katalog')->get();
-
-        return view('pengajuan_publikasi.edit', [
-            'submission' => $submission,
-            'catalogs' => $catalogs
+        return view('pengajuan_publikasi.index', [
+            'submissions' => $submissions,
+            'filters' => $request->only(['search', 'per_page', 'year']),
+            'availableYears' => $availableYears,
         ]);
     }
 
-    /**
-     * [REVISI TOTAL]
-     * Memperbarui data inti publikasi.
-     */
+    // =========================
+    // SHOW DETAIL
+    // =========================
+    
+    // =========================
+    // EDIT & UPDATE
+    // =========================
+    public function edit(SubmissionPublication $submission)
+    {
+        $submission->load(['user', 'catalog']);
+        $catalogs = Catalog::orderBy('nomor_katalog')->get();
+        return view('pengajuan_publikasi.edit', compact('submission', 'catalogs'));
+    }
+
     public function update(Request $request, SubmissionPublication $submission)
     {
-        // Validasi semua field baru
         $validatedData = $request->validate([
             'type_publikasi'  => 'required|string|max:50',
             'judul_publikasi' => 'required|string|max:255',
@@ -140,40 +103,203 @@ class SubmissionPublicationController extends Controller
             'issn'            => 'nullable|string|max:50',
             'isbn'            => 'nullable|string|max:50',
             'fungsi_pengusul' => 'required|string|max:255',
-            'tautan_publikasi'  => 'nullable|url|max:255',
-            'link_publikasi_final' => 'nullable|url|max:255', // Kolom baru
-            'spnrs_ketua_tim' => 'nullable|url', // Kolom lama Anda
+            'tautan_publikasi'=> 'nullable|url|max:255',
+            'link_publikasi_final' => 'nullable|url|max:255',
+            'spnrs_ketua_tim' => 'nullable|url|max:255',
         ]);
 
-        // Update data
         $submission->update($validatedData);
-
-        return redirect()->route('pengajuan_publikasi.index')
-            ->with('success', 'Data pengajuan berhasil diperbarui.');
+        return redirect()->route('pengajuan_publikasi.index')->with('success', 'Data pengajuan publikasi berhasil diperbarui.');
     }
 
-
-    // ===============================================
-    // FUNGSI LAMA (TETAP DIPERTAHANKAN)
-    // ===============================================
-
-    /**
-     * (TIDAK BERUBAH)
-     * Mengupdate status via AJAX.
-     */
+    // =========================
+    // UPDATE STATUS & AUTO UPLOAD
+    // =========================
     public function updateStatus(Request $request, $id)
     {
-        $submission = SubmissionPublication::findOrFail($id);
-        $submission->status = $request->status;
-        $submission->save();
+        Log::info("Memulai updateStatus untuk ID: {$id} dengan status: {$request->status}");
 
-        return response()->json(['success' => true]);
+        try {
+            $submission = SubmissionPublication::findOrFail($id);
+
+            $request->validate([
+                'status' => ['required', Rule::in(['draft', 'sedang_diperiksa', 'disetujui', 'butuh_perbaikan', 'ditolak'])]
+            ]);
+
+            $oldStatus = $submission->status;
+            
+            // 1. Simpan status baru ke Database
+            $submission->status = $request->status;
+            $submission->save();
+
+            Log::info("Status berhasil diubah dari {$oldStatus} ke {$submission->status}");
+
+            // 2. TRIGGER AUTO UPLOAD: Hanya jika status 'disetujui' dan ada link drive
+            if ($request->status == 'disetujui' && $submission->tautan_publikasi) {
+                
+                Log::info("Status disetujui. Memulai proses automasi Google Drive...");
+                
+                try {
+                    // Panggil fungsi Helper untuk upload
+                    $linkKantor = $this->processGoogleDriveUpload($submission->tautan_publikasi, $submission->judul_publikasi);
+                    
+                    // Simpan link hasil upload kantor ke database
+                    $submission->link_publikasi_final = $linkKantor;
+                    $submission->save();
+
+                    Log::info("Automasi Selesai. Link kantor: " . $linkKantor);
+
+                    // Berikan respon sukses penuh
+                    return response()->json([
+                        'success' => true, 
+                        'message' => 'Publikasi disetujui & File berhasil dipindahkan ke Google Drive Kantor.'
+                    ]);
+                    
+                } catch (\Exception $e) {
+                    // Error Handling Khusus Upload
+                    Log::error("GAGAL AUTO UPLOAD ke Drive Kantor: " . $e->getMessage());
+                    
+                    // Kita kembalikan success=true (karena status db sudah berubah), 
+                    // tapi beri pesan warning agar user tahu uploadnya gagal.
+                    return response()->json([
+                        'success' => true, 
+                        'message' => 'Status berhasil disetujui, NAMUN Gagal upload otomatis ke Drive Kantor. Cek Log error: ' . $e->getMessage()
+                    ]);
+                }
+            }
+
+            // Respon standar jika bukan status 'disetujui'
+            return response()->json(['success' => true, 'message' => 'Status berhasil diperbarui.']);
+
+        } catch (\Exception $e) {
+            // Error Handling General (Database/Server error)
+            Log::error("Gagal update status ID {$id}: " . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Terjadi kesalahan server: ' . $e->getMessage()], 500);
+        }
     }
 
-    /**
-     * (TIDAK BERUBAH)
-     * Menampilkan halaman komentar.
-     */
+    // =========================
+    // GOOGLE DRIVE LOGIC (CORE)
+    // =========================
+    private function processGoogleDriveUpload($urlPenyusun, $judulPublikasi)
+    {
+        // 1. Setup Client menggunakan Kredensial dari .env
+        $client = new Client();
+        $client->setClientId(env('GOOGLE_CLIENT_ID'));
+        $client->setClientSecret(env('GOOGLE_CLIENT_SECRET'));
+        $client->refreshToken(env('GOOGLE_DRIVE_REFRESH_TOKEN'));
+        
+        $service = new Drive($client);
+
+        // 2. Ambil ID File dari Link Penyusun
+        $fileIdPenyusun = $this->extractDriveId($urlPenyusun);
+        
+        if (!$fileIdPenyusun) {
+            throw new \Exception("Link Google Drive penyusun tidak valid atau berbentuk Folder.");
+        }
+
+        // 3. Download File Penyusun ke Temporary Server
+        $downloadUrl = "https://drive.google.com/uc?export=download&id=" . $fileIdPenyusun;
+        
+        // Gunakan HTTP Client Laravel (Timeout ditingkatkan untuk file besar)
+        $response = Http::timeout(120)->get($downloadUrl);
+        
+        if ($response->failed()) {
+             throw new \Exception("Gagal mendownload file penyusun. Pastikan akses link 'Anyone with the link'.");
+        }
+
+        $fileContent = $response->body();
+        
+        // Cek validitas konten (bukan HTML error page)
+        if (str_contains(substr($fileContent, 0, 100), '<html') || str_contains(substr($fileContent, 0, 100), '<!DOCTYPE html')) {
+            throw new \Exception("Gagal download. Link penyusun sepertinya Restricted (Tidak Publik/Private).");
+        }
+
+        // Setup Temporary File Path
+        $safeTitle = Str::slug(Str::limit($judulPublikasi, 50));
+        $tempFileName = "temp_{$safeTitle}_" . time(); // Tanpa ekstensi dulu
+        Storage::put("temp_upload/{$tempFileName}", $fileContent);
+        
+        $localPath = Storage::path("temp_upload/{$tempFileName}");
+
+        try {
+            // Deteksi Mime Type Asli File (PDF/Doc/Excel)
+            $mimeType = mime_content_type($localPath);
+            
+            // Tentukan ekstensi berdasarkan mime type (Opsional, untuk kerapihan nama file)
+            $extension = '.pdf'; // Default
+            if ($mimeType == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') $extension = '.docx';
+            if ($mimeType == 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') $extension = '.xlsx';
+            
+            // 4. Upload ke Folder Kantor
+            $folderKantorId = env('GOOGLE_DRIVE_FOLDER_ID');
+            
+            if (!$folderKantorId || $folderKantorId == 'masukkan_id_folder_tujuan_disini') {
+                throw new \Exception("ID Folder Google Drive Kantor belum disetting di .env");
+            }
+
+            $fileMetadata = new DriveFile([
+                'name' => "[FINAL] " . $judulPublikasi . $extension, // Nama file di drive kantor
+                'parents' => [$folderKantorId]
+            ]);
+
+            $uploadedFile = $service->files->create($fileMetadata, [
+                'data' => file_get_contents($localPath),
+                'mimeType' => $mimeType, 
+                'uploadType' => 'multipart',
+                'fields' => 'id, webViewLink, webContentLink'
+            ]);
+
+            return $uploadedFile->webViewLink; // Kembalikan link file kantor
+
+        } catch (\Exception $e) {
+            throw $e;
+        } finally {
+            // 5. Cleanup: Selalu hapus file temp apapun yang terjadi
+            if (Storage::exists("temp_upload/{$tempFileName}")) {
+                Storage::delete("temp_upload/{$tempFileName}");
+            }
+        }
+    }
+
+    // Helper untuk ambil ID dari URL
+    private function extractDriveId($url)
+    {
+        // Pattern 1: /file/d/ID_FILE/view
+        if (preg_match('/\/d\/([a-zA-Z0-9_-]+)/', $url, $matches)) {
+            return $matches[1];
+        }
+        // Pattern 2: id=ID_FILE
+        if (preg_match('/id=([a-zA-Z0-9_-]+)/', $url, $matches)) {
+            return $matches[1];
+        }
+        return null;
+    }
+
+    // =========================
+    // DESTROY
+    // =========================
+    public function destroy(SubmissionPublication $submission)
+    {
+        try {
+            \DB::beginTransaction();
+            if ($submission->sprp) $submission->sprp->delete();
+            if ($submission->spnsrSubmission) $submission->spnsrSubmission->delete();
+            $submission->comments()->delete();
+            $submission->delete();
+            \DB::commit();
+            return redirect()->route('pengajuan_publikasi.index')->with('success', 'Data berhasil dihapus.');
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            return redirect()->route('pengajuan_publikasi.index')->with('error', 'Gagal menghapus data.');
+        }
+    }
+
+    // =========================
+    // KOMENTAR
+    // =========================
+    
+
     public function comment(SubmissionPublication $submission)
     {
         $user = auth()->user();

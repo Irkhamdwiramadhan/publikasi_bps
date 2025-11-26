@@ -14,6 +14,12 @@ return [
     */
 
     'default' => env('FILESYSTEM_DISK', 'local'),
+    'google' => [
+    'driver' => 'google',
+    // Mengambil path dari .env, jika tidak ada pakai path default (base_path)
+    'serviceAccountCredentials' => env('GOOGLE_APPLICATION_CREDENTIALS', base_path('storage/app/google-drive/service-account.json')),
+    'folderId' => env('GOOGLE_DRIVE_FOLDER_ID'),
+],
 
     /*
     |--------------------------------------------------------------------------
