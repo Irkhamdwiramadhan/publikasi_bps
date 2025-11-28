@@ -1,12 +1,13 @@
 <x-app-layout>
     {{-- 🎨 Custom Styles --}}
     <style>
-        .pdf-frame {
-            border: none;
-            width: 100%;
-            height: 100%;
-            border-radius: 0.75rem;
-        }
+       .pdf-frame {
+    border: none;
+    width: 100%;
+    height: calc(100vh - 250px); /* Sesuaikan dengan header dan controls */
+    border-radius: 0.75rem;
+}
+
         
         .tab-btn {
             position: relative;
@@ -47,6 +48,8 @@
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(67, 84, 119, 0.4);
         }
+
+
     </style>
 
     <x-slot name="header">
@@ -60,7 +63,7 @@
         </div>
     </x-slot>
 
-    <div class="py-8 px-4 sm:px-6 lg:px-8 h-[calc(100vh-100px)] bg-gray-50">
+    <div class="py-8 px-4 sm:px-6 lg:px-8 h-screen bg-gray-50">
         <div class="max-w-7xl mx-auto h-full flex flex-col gap-6">
 
             {{-- Controls Area --}}
@@ -129,5 +132,6 @@
             viewer.src = newSrc;
             downloadBtn.href = newSrc;
         }
+        
     </script>
 </x-app-layout>

@@ -10,50 +10,46 @@
 
     <title>{{ config('app.name', 'Aplikasi Publikasi') }}</title>
 
-    <!-- Font Modern -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- Styles & Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <style>
-        /* Sidebar scrollbar */
+        /* Sidebar scrollbar styling */
         .sidebar-scroll::-webkit-scrollbar {
-            width: 6px;
+            width: 5px;
         }
         .sidebar-scroll::-webkit-scrollbar-track {
             background: transparent;
         }
         .sidebar-scroll::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.2);
             border-radius: 3px;
         }
         .sidebar-scroll::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.22);
+            background: rgba(255, 255, 255, 0.4);
         }
 
-        /* Table subtle dark style (not full black) */
+        /* Table styling (keep original muted style) */
         .table-muted {
-            background: #f3f4f6; /* slate-100 */
-            color: #0f172a;      /* slate-900 */
+            background: #f3f4f6;
+            color: #0f172a;
             border-radius: 0.5rem;
             overflow: hidden;
         }
         .table-muted thead {
-            background: #e6edf8; /* very light blue tint */
-            color: #0b2440;      /* deep blue text */
+            background: #e6edf8;
+            color: #0b2440;
             font-weight: 600;
         }
         .table-muted tbody tr:nth-child(even) {
-            background: #eef2f6; /* alternating soft rows */
+            background: #eef2f6;
         }
 
-        /* Soft global transitions */
+        /* Animation utilities */
         .soft-transition {
             transition: all 220ms cubic-bezier(.2,.9,.2,1);
         }
-
-        /* Fade-in for main content */
         .fade-in-up {
             opacity: 0;
             transform: translateY(8px);
@@ -62,11 +58,13 @@
         @keyframes fadeInUp {
             to { opacity: 1; transform: translateY(0); }
         }
-
-        /* subtle focus ring for accessibility */
         .ring-focus:focus {
             outline: none;
             box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.12);
+        }
+        /* TAMBAHKAN INI: Paksa warna background muncul */
+        .bps-gradient {
+            background: linear-gradient(135deg, #0f766e 0%, #0e7490 100%) !important;
         }
     </style>
 </head>
@@ -79,16 +77,14 @@
         {{-- ====== KONTEN UTAMA ====== --}}
         <div class="drawer-content flex flex-col min-h-screen">
             
-            {{-- NAVBAR: tetap dark/navy --}}
+            {{-- NAVBAR --}}
             <div class="sticky top-0 z-40">
-                <nav class=" px-4 sm:px-6 lg:px-8 h-16
-                             text-white
-                            shadow-lg">
+                <nav class="px-4 sm:px-6 lg:px-8 h-16 text-white shadow-lg">
                     @include('layouts.navigation')
                 </nav>
             </div>
 
-            {{-- Header (bisa putih dengan subtle border) --}}
+            {{-- Header --}}
             @if (isset($header))
             <header class="bg-white border-b border-slate-200">
                 <div class="py-4 px-4 sm:px-6 lg:px-8">
@@ -97,61 +93,45 @@
             </header>
             @endif
 
-            {{-- Konten utama (background putih, card putih dengan shadow lembut) --}}
+            {{-- Main Slot --}}
             <main class="flex-grow p-6 sm:p-8">
                 <div class="max-w-full mx-auto space-y-6">
-                    {{-- konten slot — beri wrapper card agar terkesan terangkat --}}
                     <div class="bg-white shadow-sm rounded-2xl p-6 soft-transition fade-in-up">
                         {{ $slot }}
                     </div>
                 </div>
             </main>
 
-            {{-- Footer ringan --}}
+            {{-- Footer --}}
             <footer class="py-4 text-center text-sm text-slate-500 border-t border-slate-100">
                 Copyright © {{ date('Y') }} - All right reserved by BPS Kabupaten Tegal And STT Terpadu Nurul Fikri
             </footer>
         </div>
 
-        {{-- ====== SIDEBAR (BLUE DARK) ====== --}}
-        <div class="drawer-side">
+        {{-- ====== SIDEBAR AREA ====== --}}
+        <div class="drawer-side z-50">
             <label for="my-drawer-2" aria-label="close sidebar" class="drawer-overlay"></label>
             
-            <aside class="w-64 min-h-full
-                          bg-gradient-to-b from-sky-900 via-slate-900 to-slate-800
-                          text-slate-100 shadow-2xl rounded-r-2xl overflow-hidden soft-transition">
-                
-                
-                   
-
-                    {{-- keep original sidebar content; styling for items is done via classes in sidebar blade --}}
-                    @include('layouts.sidebar')
-
-                   
-                </nav>
-            </aside>
+            {{-- PANGGIL FILE SIDEBAR DI SINI --}}
+            @include('layouts.sidebar')
+            
         </div>
     </div>
 
     @stack('scripts')
 
-    {{-- Enhance sidebar items: add small hover/focus effects without changing markup --}}
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // add classes to links inside sidebar for consistent look
+            // Helper styling scripts
             document.querySelectorAll('.drawer-side a, .drawer-side button').forEach(el => {
-                el.classList.add('block', 'px-3', 'py-2', 'rounded-lg', 'soft-transition', 'ring-focus');
-                // hover: subtle light bg
-                el.addEventListener('mouseenter', () => el.classList.add('bg-white/6', 'translate-x-1'));
-                el.addEventListener('mouseleave', () => el.classList.remove('bg-white/6', 'translate-x-1'));
+                // Ensure sidebar links have consistent base classes if needed
+                el.classList.add('soft-transition');
             });
 
-            // style tables inside content area to be "slightly dark" as requested
             document.querySelectorAll('main table').forEach(t => {
                 t.classList.add('table-muted', 'w-full', 'overflow-hidden');
-                // add spacing for table container
                 const wrapper = document.createElement('div');
-                wrapper.className = 'p-0';
+                wrapper.className = 'p-0 overflow-x-auto'; // Added overflow auto for responsiveness
                 t.parentNode.insertBefore(wrapper, t);
                 wrapper.appendChild(t);
             });

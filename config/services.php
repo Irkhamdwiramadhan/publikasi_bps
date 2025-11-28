@@ -39,6 +39,15 @@ return [
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
         'redirect' => env('GOOGLE_REDIRECT_URI'),
     ],
+    // ... konfigurasi lain (google, twitter, dll) ...
+
+    'bps' => [
+        'client_id' => env('BPS_SSO_CLIENT_ID'),
+        'client_secret' => env('BPS_SSO_CLIENT_SECRET'),
+        'redirect' => env('BPS_SSO_REDIRECT_URI'),
+        'base_url' => env('BPS_SSO_BASE_URL'), 
+        'realm' => env('BPS_SSO_REALM', 'pegawai-bps'),
+    ],
 
 
 ];

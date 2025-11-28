@@ -41,13 +41,18 @@
 
         /* Background gradien lembut biru muda */
         body {
-            background: linear-gradient(135deg, #93c5fd 0%, #60a5fa 50%, #3b82f6 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: 'Inter', sans-serif;
-        }
+    background-image: url("{{ asset('images/login4.png') }}");
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+    
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Inter', sans-serif;
+}
+
 
         .login-card {
             animation: fadeIn 0.8s ease-out;
@@ -56,9 +61,10 @@
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
             overflow: hidden;
             width: 100%;
-            max-width: 1200px;
+            max-height: 900px;
+            max-width: 700px;
             /* ➜ Diperbesar */
-            padding: 3rem 3.2rem;
+            padding: 1rem 1.1rem;
             /* ➜ Diperbesar */
             position: relative;
         }
@@ -140,7 +146,7 @@
     <div class="login-card">
 
 
-        <div class="form-wrapper">
+        <div class="">
             {{ $slot }}
         </div>
     </div>

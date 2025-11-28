@@ -11,6 +11,7 @@ use App\Http\Controllers\SpnsrController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\BrsController;
 use Google\Client;
+use App\Http\Controllers\Auth\SsoController;
 
 
 /*
@@ -186,6 +187,8 @@ Route::get('/google/callback', function (Request $request) {
         return 'Error: ' . $e->getMessage();
     }
 });
+Route::get('/auth/sso/redirect', [SsoController::class, 'redirect'])->name('sso.login');
+Route::get('/auth/sso/callback', [SsoController::class, 'callback']);
 
 // --- ROUTE AUTH DEFAULT (LOGIN, RESET PASSWORD DLL) ---
 require __DIR__ . '/auth.php';
