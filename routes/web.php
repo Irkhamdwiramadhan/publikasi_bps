@@ -140,6 +140,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('brs', BrsController::class)->middleware('auth');
     // HARUS SEPERTI INI:
     Route::get('/brs/{brs}', [BrsController::class, 'show'])->name('brs.show');
+    Route::post('/brs/generate-number', [App\Http\Controllers\BrsController::class, 'generateNumber'])->name('brs.generateNumber');
 
 
 

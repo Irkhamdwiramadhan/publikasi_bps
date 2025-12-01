@@ -20,6 +20,7 @@ class Brs extends Model
         'infografis_paths',
         'zip_path',
         'excel_path',
+        'nomor_brs',
     ];
 
     /**

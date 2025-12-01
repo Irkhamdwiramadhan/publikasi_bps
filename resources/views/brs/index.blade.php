@@ -68,7 +68,7 @@
                                 <tr>
                                     <th class="w-10">No.</th>
                                     <th>Judul</th>
-                                    <th>Bulan</th>
+                                    <th>Nomor BRS</th>
                                     <th>Pengelola</th>
                                     <th>File</th>
                                     <th class="w-20 text-center">Aksi</th> {{-- REVISI --}}
@@ -79,7 +79,7 @@
                                     <tr class="hover">
                                         <th>{{ $loop->iteration + ($brs_list->currentPage() - 1) * $brs_list->perPage() }}</th>
                                         <td class="whitespace-normal font-medium">{{ $brs->judul }}</td>
-                                        <td>{{ $brs->bulan->isoFormat('MMMM YYYY') }}</td>
+                                        <td>{{ $brs->nomor_brs }}</td>
                                         <td>{{ $brs->user->name ?? 'N/A' }}</td>
 
                                         {{-- REVISI: Kolom File (Icons) --}}
