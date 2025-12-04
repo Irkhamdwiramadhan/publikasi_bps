@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+
 class Brs extends Model
 {
     use HasFactory;
@@ -21,6 +22,7 @@ class Brs extends Model
         'zip_path',
         'excel_path',
         'nomor_brs',
+        'status',
     ];
 
     /**
@@ -38,5 +40,10 @@ class Brs extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+    // Relasi ke Komentar
+    public function comments()
+    {
+        return $this->hasMany(BrsComment::class)->orderBy('created_at', 'asc');
     }
 }

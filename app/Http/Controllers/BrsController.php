@@ -5,14 +5,39 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Brs;
+use App\Models\BrsComment; // PENTING: Import model komentar
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Auth;
+
+// Import Library Google
+use Google\Client;
+use Google\Service\Drive;
+use Google\Service\Drive\DriveFile;
 
 class BrsController extends Controller
 {
     public function index()
     {
-        $brs_list = Brs::with('user')->latest('bulan')->paginate(10);
+        // Eager load comments untuk efisiensi
+        $brs_list = Brs::with(['user', 'comments'])->latest('bulan')->paginate(10);
+
+        // LOGIC NOTIFIKASI CHAT (Sama seperti Publikasi)
+        $user = Auth::user();
+        $userRoles = $user->getRoleNames();
+        // Tentukan peran saat ini
+        $role = $userRoles->contains('Penyusun') ? 'Penyusun' : ($userRoles->contains('Pemeriksa') ? 'Pemeriksa' : $userRoles->first());
+
+        $brs_list->getCollection()->transform(function($item) use ($role) {
+            // Hitung pesan yang belum dibaca dari "lawan bicara"
+            $roleToCheck = $role === 'Penyusun' ? 'Pemeriksa' : 'Penyusun';
+            $item->unread_count = $item->comments()->where('role', $roleToCheck)->where('is_read', false)->count();
+            return $item;
+        });
+
         return view('brs.index', compact('brs_list'));
     }
 
@@ -22,53 +47,28 @@ class BrsController extends Controller
         return view('brs.create', compact('users'));
     }
 
-    /**
-     * API Method: Generate Nomor BRS secara otomatis
-     * Dipanggil via AJAX dari create.blade.php
-     */
+    // --- API GENERATE NOMOR ---
     public function generateNumber(Request $request)
     {
-        // Validasi input tanggal saja
-        $request->validate([
-            'bulan' => 'required|date'
-        ]);
-
+        $request->validate(['bulan' => 'required|date']);
         $date = Carbon::parse($request->bulan);
-
-        // --- LOGIKA GENERATE NOMOR ---
         
-        // 1. Hitung Urutan (Reset tiap tahun)
         $jumlahDataTahunIni = Brs::whereYear('bulan', $date->year)->count();
         $urutan = str_pad($jumlahDataTahunIni + 1, 2, '0', STR_PAD_LEFT);
-
-        // 2. Format Bulan (Angka)
         $bulanAngka = $date->format('m');
-
-        // 3. Kode BPS
         $kodeBps = '3328';
-
-        // 4. Hitung Tahun Romawi (Start 2024 = I)
         $tahunDasar = 2023; 
         $selisihTahun = $date->year - $tahunDasar;
         $angkaRomawi = $selisihTahun > 0 ? $selisihTahun : 1; 
         $thRomawi = $this->numberToRoman($angkaRomawi);
-
-        // 5. Format Tanggal Rilis Indonesia
         $tanggalRilis = $date->locale('id')->isoFormat('D MMMM Y');
-
-        // Gabungkan
         $nomorBrs = "No. {$urutan}/{$bulanAngka}/{$kodeBps}/Th. {$thRomawi}, {$tanggalRilis}";
 
-        // Kembalikan sebagai JSON untuk dibaca JavaScript
-        return response()->json([
-            'status' => 'success',
-            'nomor' => $nomorBrs
-        ]);
+        return response()->json(['status' => 'success', 'nomor' => $nomorBrs]);
     }
 
     public function store(Request $request)
     {
-        // Validasi HANYA metadata
         $validatedData = $request->validate([
             'judul'     => 'required|string|max:255',
             'bulan'     => 'required|date', 
@@ -76,89 +76,320 @@ class BrsController extends Controller
             'user_id'   => 'required|exists:users,id',
         ]);
 
-        // Simpan data
         Brs::create([
             'judul'     => $validatedData['judul'],
             'nomor_brs' => $validatedData['nomor_brs'],
             'user_id'   => $validatedData['user_id'],
             'bulan'     => $validatedData['bulan'],
-            // Field file dibiarkan null dulu (pastikan di database kolom file boleh null)
+            'status'    => 'draft', // Default status
         ]);
 
-        return redirect()->route('brs.index')->with('success', 'Data BRS berhasil dibuat. Silakan upload dokumen melalui tabel.');
+        return redirect()->route('brs.index')->with('success', 'Data BRS berhasil dibuat.');
     }
 
-    /**
-     * BARU: Method untuk menangani upload file dari Modal di Index
-     */
+    // --- FITUR UPLOAD (GOOGLE DRIVE) ---
     public function uploadFiles(Request $request, $id)
     {
         $brs = Brs::findOrFail($id);
 
-        // Validasi File
+        // Validasi
         $request->validate([
-            'pdf'          => 'required|file|mimes:pdf|max:50120',
-            'zip'          => 'required|file|mimes:zip|max:10240',
-            'excel'        => 'nullable|file|mimes:xlsx,xls|max:50120',
-            'infografis'   => 'required|array',
-            'infografis.*' => 'image|mimes:jpeg,png,jpg,gif|max:20048'
+            'pdf'          => 'nullable|file|mimes:pdf|max:51200', // Ubah jadi nullable agar bisa upload parsial jika revisi cuma 1 file
+            'zip'          => 'nullable|file|mimes:zip,rar|max:20480',
+            'excel'        => 'nullable|file|mimes:xlsx,xls|max:20480',
+            'infografis'   => 'nullable|array',
+            'infografis.*' => 'image|mimes:jpeg,png,jpg|max:5120'
         ]);
 
-        // Logic Upload (Sama seperti sebelumnya)
-        $updates = [];
+        try {
+            $service = $this->getGoogleDriveService();
+            $parentFolderId = env('GOOGLE_DRIVE_BRS_FOLDER_ID');
+            if (!$parentFolderId) throw new \Exception("ID Folder BRS belum disetting.");
 
-        if ($request->hasFile('pdf')) {
-            // Hapus file lama jika ada (opsional, praktik yang baik)
-            if($brs->pdf_path) Storage::disk('public')->delete($brs->pdf_path);
-            $updates['pdf_path'] = $request->file('pdf')->store('brs/pdf', 'public');
-        }
-        
-        if ($request->hasFile('zip')) {
-            if($brs->zip_path) Storage::disk('public')->delete($brs->zip_path);
-            $updates['zip_path'] = $request->file('zip')->store('brs/zip', 'public');
-        }
-        
-        if ($request->hasFile('excel')) {
-            if($brs->excel_path) Storage::disk('public')->delete($brs->excel_path);
-            $updates['excel_path'] = $request->file('excel')->store('brs/excel', 'public');
-        }
-        
-        if ($request->hasFile('infografis')) {
-            // Jika ingin menimpa total (hapus yang lama)
-            // if($brs->infografis_paths) { ... logic hapus file lama ... }
+            // Format Nama Folder & File
+            $tahun = Carbon::parse($brs->bulan)->format('Y');
+            $cleanJudul = Str::limit(preg_replace('/[^A-Za-z0-9 \-]/', '', $brs->judul), 50);
             
-            $infografisPaths = [];
-            foreach ($request->file('infografis') as $file) {
-                $infografisPaths[] = $file->store('brs/infografis', 'public');
+            // Cari/Buat Folder
+            $subFolderName = "[{$tahun}] " . trim($cleanJudul);
+            $subFolderId = $this->findOrCreateFolder($service, $subFolderName, $parentFolderId);
+
+            $updates = [];
+            
+            // Nama file dinamis berdasarkan status
+            // Jika masih draft/revisi, beri label [DRAFT]. Jika disetujui, [FINAL].
+            $statusLabel = ($brs->status == 'disetujui') ? '[FINAL]' : '[DRAFT]';
+            $baseName = "{$subFolderName} {$statusLabel}";
+
+            // --- 1. UPLOAD PDF (REPLACE) ---
+            if ($request->hasFile('pdf')) {
+                // Hapus file lama di Drive jika ada
+                if ($brs->pdf_path) {
+                    $this->deleteFileFromDrive($service, $brs->pdf_path);
+                }
+                
+                $fileName = "{$baseName} [BRS].pdf";
+                $updates['pdf_path'] = $this->uploadToDrive($service, $request->file('pdf'), $subFolderId, $fileName);
             }
-            $updates['infografis_paths'] = $infografisPaths;
+
+            // --- 2. UPLOAD ZIP (REPLACE) ---
+            if ($request->hasFile('zip')) {
+                if ($brs->zip_path) {
+                    $this->deleteFileFromDrive($service, $brs->zip_path);
+                }
+
+                $fileName = "{$baseName} [DATA].zip";
+                $updates['zip_path'] = $this->uploadToDrive($service, $request->file('zip'), $subFolderId, $fileName);
+            }
+
+            // --- 3. UPLOAD EXCEL (REPLACE) ---
+            if ($request->hasFile('excel')) {
+                if ($brs->excel_path) {
+                    $this->deleteFileFromDrive($service, $brs->excel_path);
+                }
+
+                $ext = $request->file('excel')->getClientOriginalExtension();
+                $fileName = "{$baseName} [TABEL].{$ext}";
+                $updates['excel_path'] = $this->uploadToDrive($service, $request->file('excel'), $subFolderId, $fileName);
+            }
+
+            // --- 4. UPLOAD INFOGRAFIS (APPEND/REPLACE?) ---
+            // Infografis agak tricky karena array. 
+            // Saran: Jika upload baru, hapus SEMUA gambar lama, ganti dengan yang baru.
+            if ($request->hasFile('infografis')) {
+                
+                // Hapus semua gambar lama di Drive
+                if ($brs->infografis_paths && is_array($brs->infografis_paths)) {
+                    foreach ($brs->infografis_paths as $oldLink) {
+                        $this->deleteFileFromDrive($service, $oldLink);
+                    }
+                }
+
+                $infografisLinks = [];
+                foreach ($request->file('infografis') as $index => $file) {
+                    $urutan = $index + 1;
+                    $ext = $file->getClientOriginalExtension();
+                    $fileName = "{$baseName} [INFO-{$urutan}].{$ext}";
+                    $infografisLinks[] = $this->uploadToDrive($service, $file, $subFolderId, $fileName);
+                }
+                $updates['infografis_paths'] = $infografisLinks;
+            }
+
+            // Update status otomatis jika masih draft
+            if ($brs->status == 'draft' || $brs->status == 'butuh_perbaikan') {
+                $updates['status'] = 'sedang_diperiksa';
+            }
+
+            $brs->update($updates);
+
+            return redirect()->back()->with('success', 'File berhasil diperbarui (File lama telah dihapus dari Drive).');
+
+        } catch (\Exception $e) {
+            Log::error("Gagal Upload BRS: " . $e->getMessage());
+            return back()->with('error', 'Gagal upload: ' . $e->getMessage());
         }
-
-        $brs->update($updates);
-
-        return redirect()->back()->with('success', 'File berhasil diunggah!');
     }
 
+    // --- FITUR BARU: UPDATE STATUS ---
+    public function updateStatus(Request $request, $id)
+    {
+        try {
+            $brs = Brs::findOrFail($id);
+            $request->validate([
+                'status' => ['required', Rule::in(['draft', 'sedang_diperiksa', 'disetujui', 'butuh_perbaikan', 'ditolak'])]
+            ]);
+
+            // Jika status berubah jadi DISETUJUI, kita Rename file di Drive
+            if ($request->status == 'disetujui' && $brs->status != 'disetujui') {
+                $this->renameFilesToFinal($brs);
+            }
+
+            $brs->status = $request->status;
+            $brs->save();
+            
+            return response()->json(['success' => true, 'message' => 'Status diperbarui & File di-rename (jika disetujui).']);
+
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Gagal: ' . $e->getMessage()], 500);
+        }
+    }
+
+    // --- FITUR BARU: HALAMAN KOMENTAR (CHAT) ---
+    public function comment($id)
+    {
+        $brs = Brs::with(['comments.user', 'user'])->findOrFail($id);
+        
+        $user = Auth::user();
+        $roles = $user->getRoleNames();
+        $role = $roles->contains('Penyusun') ? 'Penyusun' : ($roles->contains('Pemeriksa') ? 'Pemeriksa' : 'Penyusun');
+
+        // Tandai pesan sudah dibaca
+        $roleToCheck = $role === 'Penyusun' ? 'Pemeriksa' : 'Penyusun';
+        $brs->comments()->where('role', $roleToCheck)->where('is_read', false)->update(['is_read' => true]);
+
+        return view('brs.comment', compact('brs', 'role'));
+    }
+    private function deleteFileFromDrive($service, $fileUrl)
+    {
+        try {
+            // Ekstrak ID dari URL
+            $fileId = $this->extractDriveId($fileUrl);
+            if ($fileId) {
+                $service->files->delete($fileId);
+                Log::info("File lama dihapus dari Drive: " . $fileId);
+            }
+        } catch (\Exception $e) {
+            // Jangan crash kalau file lama gak ketemu (mungkin sudah dihapus manual)
+            Log::warning("Gagal hapus file lama di Drive: " . $e->getMessage());
+        }
+    }
+    private function renameFilesToFinal($brs)
+    {
+        try {
+            $service = $this->getGoogleDriveService();
+            
+            // Fungsi kecil untuk rename satu file
+            $doRename = function($url, $suffix) use ($service) {
+                if (!$url) return;
+                $id = $this->extractDriveId($url);
+                if (!$id) return;
+
+                // Ambil nama file asli
+                $file = $service->files->get($id, ['fields' => 'name']);
+                $oldName = $file->getName();
+                
+                // Ganti [DRAFT] jadi [FINAL]
+                $newName = str_replace('[DRAFT]', '[FINAL]', $oldName);
+                
+                // Update ke Google
+                $fileMetadata = new DriveFile(['name' => $newName]);
+                $service->files->update($id, $fileMetadata);
+            };
+
+            // Jalankan rename untuk semua file yang ada
+            $doRename($brs->pdf_path, '[BRS].pdf');
+            $doRename($brs->zip_path, '[DATA].zip');
+            $doRename($brs->excel_path, '[TABEL].xlsx');
+            
+            if ($brs->infografis_paths) {
+                foreach ($brs->infografis_paths as $path) {
+                    $doRename($path, '[INFO].jpg');
+                }
+            }
+
+        } catch (\Exception $e) {
+            Log::error("Gagal Rename ke FINAL: " . $e->getMessage());
+        }
+    }
+
+    private function extractDriveId($url)
+    {
+        if (preg_match('/\/d\/([a-zA-Z0-9_-]+)/', $url, $matches)) return $matches[1];
+        if (preg_match('/id=([a-zA-Z0-9_-]+)/', $url, $matches)) return $matches[1];
+        return null;
+    }
+
+    // --- FITUR BARU: KIRIM KOMENTAR ---
+    public function storeComment(Request $request, $id)
+    {
+        $request->validate(['body' => 'required|string|max:1000']);
+        
+        $brs = Brs::findOrFail($id);
+        $user = Auth::user();
+        $roles = $user->getRoleNames();
+        $role = $roles->contains('Penyusun') ? 'Penyusun' : ($roles->contains('Pemeriksa') ? 'Pemeriksa' : 'Penyusun');
+
+        BrsComment::create([
+            'brs_id' => $brs->id,
+            'user_id' => $user->id,
+            'body' => $request->body,
+            'role' => $role,
+            'is_read' => false
+        ]);
+
+        return redirect()->route('brs.comment', $id)->with('success', 'Pesan terkirim.');
+    }
+
+    // --- HELPER GOOGLE DRIVE ---
+    private function findOrCreateFolder($service, $folderName, $parentId)
+    {
+        $query = "mimeType='application/vnd.google-apps.folder' and name='" . str_replace("'", "\'", $folderName) . "' and '{$parentId}' in parents and trashed=false";
+        $files = $service->files->listFiles(['q' => $query, 'fields' => 'files(id, name)']);
+
+        if (count($files->getFiles()) > 0) {
+            return $files->getFiles()[0]->getId();
+        }
+
+        $folderMetadata = new DriveFile([
+            'name' => $folderName,
+            'mimeType' => 'application/vnd.google-apps.folder',
+            'parents' => [$parentId]
+        ]);
+
+        $folder = $service->files->create($folderMetadata, ['fields' => 'id']);
+        return $folder->id;
+    }
+
+    private function getGoogleDriveService()
+    {
+        $client = new Client();
+        $client->setClientId(env('GOOGLE_CLIENT_ID'));
+        $client->setClientSecret(env('GOOGLE_CLIENT_SECRET'));
+        
+        $refreshToken = env('GOOGLE_DRIVE_REFRESH_TOKEN');
+        if (!$refreshToken) throw new \Exception("Refresh Token tidak ditemukan.");
+
+        $client->refreshToken($refreshToken);
+        
+        try {
+            $newAccessToken = $client->fetchAccessTokenWithRefreshToken($refreshToken);
+            if (isset($newAccessToken['error'])) throw new \Exception("Gagal Refresh Token.");
+            $client->setAccessToken($newAccessToken);
+        } catch (\Exception $e) {
+             throw new \Exception("Error Auth Google: " . $e->getMessage());
+        }
+
+        return new Drive($client);
+    }
+
+    private function uploadToDrive($service, $fileObject, $folderId, $fileName)
+    {
+        $content = file_get_contents($fileObject->getRealPath());
+        $mimeType = $fileObject->getMimeType();
+
+        $fileMetadata = new DriveFile([
+            'name' => $fileName,
+            'parents' => [$folderId]
+        ]);
+
+        $uploadedFile = $service->files->create($fileMetadata, [
+            'data' => $content,
+            'mimeType' => $mimeType,
+            'uploadType' => 'multipart',
+            'fields' => 'id, webViewLink'
+        ]);
+
+        return $uploadedFile->webViewLink;
+    }
+
+    // --- STANDAR LAINNYA ---
     public function show(string $id)
     {
         $brs = Brs::findOrFail($id);
         $brs->load('user');
         return view('brs.show', compact('brs'));
     }
+
     public function edit(string $id)
     {
         $brs = Brs::findOrFail($id);
-        $users = User::orderBy('name')->get(); // Data users untuk dropdown
-        
+        $users = User::orderBy('name')->get();
         return view('brs.edit', compact('brs', 'users'));
     }
 
-    // Memproses Update Data
     public function update(Request $request, string $id)
     {
         $brs = Brs::findOrFail($id);
-
-        // Validasi (File tidak divalidasi disini karena lewat menu Upload di Index)
         $validatedData = $request->validate([
             'judul'     => 'required|string|max:255',
             'bulan'     => 'required|date', 
@@ -176,7 +407,6 @@ class BrsController extends Controller
         return redirect()->route('brs.index')->with('success', 'Data BRS berhasil diperbarui.');
     }
 
-    // Helper Romawi
     private function numberToRoman($number) {
         $map = array('M' => 1000, 'CM' => 900, 'D' => 500, 'CD' => 400, 'C' => 100, 'XC' => 90, 'L' => 50, 'XL' => 40, 'X' => 10, 'IX' => 9, 'V' => 5, 'IV' => 4, 'I' => 1);
         $returnValue = '';
