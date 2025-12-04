@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Brs;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Storage;
 
 class BrsController extends Controller
 {
@@ -67,49 +68,75 @@ class BrsController extends Controller
 
     public function store(Request $request)
     {
-        // Validasi
+        // Validasi HANYA metadata
         $validatedData = $request->validate([
             'judul'     => 'required|string|max:255',
             'bulan'     => 'required|date', 
-            'nomor_brs' => 'required|string', // Pastikan nomor brs terisi
+            'nomor_brs' => 'required|string',
             'user_id'   => 'required|exists:users,id',
-            'pdf'       => 'required|file|mimes:pdf|max:50120',
-            'zip'       => 'required|file|mimes:zip|max:10240',
-            'excel'     => 'nullable|file|mimes:xlsx,xls|max:50120',
+        ]);
+
+        // Simpan data
+        Brs::create([
+            'judul'     => $validatedData['judul'],
+            'nomor_brs' => $validatedData['nomor_brs'],
+            'user_id'   => $validatedData['user_id'],
+            'bulan'     => $validatedData['bulan'],
+            // Field file dibiarkan null dulu (pastikan di database kolom file boleh null)
+        ]);
+
+        return redirect()->route('brs.index')->with('success', 'Data BRS berhasil dibuat. Silakan upload dokumen melalui tabel.');
+    }
+
+    /**
+     * BARU: Method untuk menangani upload file dari Modal di Index
+     */
+    public function uploadFiles(Request $request, $id)
+    {
+        $brs = Brs::findOrFail($id);
+
+        // Validasi File
+        $request->validate([
+            'pdf'          => 'required|file|mimes:pdf|max:50120',
+            'zip'          => 'required|file|mimes:zip|max:10240',
+            'excel'        => 'nullable|file|mimes:xlsx,xls|max:50120',
             'infografis'   => 'required|array',
             'infografis.*' => 'image|mimes:jpeg,png,jpg,gif|max:20048'
         ]);
 
-        // Siapkan data dasar
-        $dataToStore = [
-            'judul'     => $validatedData['judul'],
-            'nomor_brs' => $validatedData['nomor_brs'], // Simpan nomor dari form
-            'user_id'   => $validatedData['user_id'],
-            'bulan'     => $validatedData['bulan'], // Format Y-m-d
-        ];
+        // Logic Upload (Sama seperti sebelumnya)
+        $updates = [];
 
-        // Upload File Logic (Sama seperti sebelumnya)
         if ($request->hasFile('pdf')) {
-            $dataToStore['pdf_path'] = $request->file('pdf')->store('brs/pdf', 'public');
-        }
-        if ($request->hasFile('zip')) {
-            $dataToStore['zip_path'] = $request->file('zip')->store('brs/zip', 'public');
-        }
-        if ($request->hasFile('excel')) {
-            $dataToStore['excel_path'] = $request->file('excel')->store('brs/excel', 'public');
+            // Hapus file lama jika ada (opsional, praktik yang baik)
+            if($brs->pdf_path) Storage::disk('public')->delete($brs->pdf_path);
+            $updates['pdf_path'] = $request->file('pdf')->store('brs/pdf', 'public');
         }
         
-        $infografisPaths = [];
+        if ($request->hasFile('zip')) {
+            if($brs->zip_path) Storage::disk('public')->delete($brs->zip_path);
+            $updates['zip_path'] = $request->file('zip')->store('brs/zip', 'public');
+        }
+        
+        if ($request->hasFile('excel')) {
+            if($brs->excel_path) Storage::disk('public')->delete($brs->excel_path);
+            $updates['excel_path'] = $request->file('excel')->store('brs/excel', 'public');
+        }
+        
         if ($request->hasFile('infografis')) {
+            // Jika ingin menimpa total (hapus yang lama)
+            // if($brs->infografis_paths) { ... logic hapus file lama ... }
+            
+            $infografisPaths = [];
             foreach ($request->file('infografis') as $file) {
                 $infografisPaths[] = $file->store('brs/infografis', 'public');
             }
+            $updates['infografis_paths'] = $infografisPaths;
         }
-        $dataToStore['infografis_paths'] = $infografisPaths;
 
-        Brs::create($dataToStore);
+        $brs->update($updates);
 
-        return redirect()->route('brs.index')->with('success', 'Data BRS berhasil ditambahkan.');
+        return redirect()->back()->with('success', 'File berhasil diunggah!');
     }
 
     public function show(string $id)
@@ -117,6 +144,36 @@ class BrsController extends Controller
         $brs = Brs::findOrFail($id);
         $brs->load('user');
         return view('brs.show', compact('brs'));
+    }
+    public function edit(string $id)
+    {
+        $brs = Brs::findOrFail($id);
+        $users = User::orderBy('name')->get(); // Data users untuk dropdown
+        
+        return view('brs.edit', compact('brs', 'users'));
+    }
+
+    // Memproses Update Data
+    public function update(Request $request, string $id)
+    {
+        $brs = Brs::findOrFail($id);
+
+        // Validasi (File tidak divalidasi disini karena lewat menu Upload di Index)
+        $validatedData = $request->validate([
+            'judul'     => 'required|string|max:255',
+            'bulan'     => 'required|date', 
+            'nomor_brs' => 'required|string',
+            'user_id'   => 'required|exists:users,id',
+        ]);
+
+        $brs->update([
+            'judul'     => $validatedData['judul'],
+            'nomor_brs' => $validatedData['nomor_brs'],
+            'user_id'   => $validatedData['user_id'],
+            'bulan'     => $validatedData['bulan'],
+        ]);
+
+        return redirect()->route('brs.index')->with('success', 'Data BRS berhasil diperbarui.');
     }
 
     // Helper Romawi
@@ -134,9 +191,4 @@ class BrsController extends Controller
         }
         return $returnValue;
     }
-    
-    // Stub methods
-    public function edit(string $id) {}
-    public function update(Request $request, string $id) {}
-    public function destroy(string $id) {}
 }
